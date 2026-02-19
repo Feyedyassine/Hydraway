@@ -85,6 +85,28 @@
       ]
     }
   },
+  "advantages": {
+    "label": "What it changes",
+    "title": "Feel the difference from the first stick",
+    "items": {
+      "hydration": {
+        "title": "Rapid hydration",
+        "description": "Electrolytes help your body absorb water faster and more effectively than water alone."
+      },
+      "recovery": {
+        "title": "Full recovery",
+        "description": "Replenishes minerals lost through sweat and reduces post-effort fatigue."
+      },
+      "taste": {
+        "title": "Natural taste",
+        "description": "A clean, refreshing flavor with no added sugar and no artificial aftertaste."
+      },
+      "performance": {
+        "title": "Better performance",
+        "description": "Supports muscle function, endurance, and focus by maintaining proper fluid balance."
+      }
+    }
+  },
   "formulation": {
     "label": "What's inside",
     "title": "Every stick works for you",

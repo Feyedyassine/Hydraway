@@ -85,6 +85,28 @@
       ]
     }
   },
+  "advantages": {
+    "label": "Ce que ça change",
+    "title": "Ressentez la différence dès le premier stick",
+    "items": {
+      "hydration": {
+        "title": "Hydratation rapide",
+        "description": "Les électrolytes aident votre corps à absorber l'eau plus vite et plus efficacement qu'avec de l'eau seule."
+      },
+      "recovery": {
+        "title": "Récupération complète",
+        "description": "Rétablit les minéraux perdus par la transpiration et réduit la fatigue après l'effort."
+      },
+      "taste": {
+        "title": "Goût naturel",
+        "description": "Une saveur fraîche et clean, sans sucre ajouté, sans arrière-goût artificiel."
+      },
+      "performance": {
+        "title": "Meilleures performances",
+        "description": "Soutient la fonction musculaire, l'endurance et la concentration en maintenant l'équilibre hydrique."
+      }
+    }
+  },
   "formulation": {
     "label": "Ce qu'il y a dedans",
     "title": "Chaque stick travaille pour vous",

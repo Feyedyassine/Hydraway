@@ -6,6 +6,10 @@ import {
   Atom,
   Zap,
   Check,
+  Droplets,
+  BatteryFull,
+  Leaf,
+  Gauge,
 } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 
@@ -30,8 +34,16 @@ const formulaCards = [
   },
 ] as const;
 
+const advantages = [
+  { key: "hydration", icon: Droplets, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+  { key: "recovery", icon: BatteryFull, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { key: "taste", icon: Leaf, color: "text-amber-500", bg: "bg-amber-500/10" },
+  { key: "performance", icon: Gauge, color: "text-brand-red", bg: "bg-brand-red/10" },
+] as const;
+
 export default function WhyHydraWay() {
   const b = useTranslations("benefits");
+  const a = useTranslations("advantages");
   const f = useTranslations("formulation");
 
   return (
@@ -77,6 +89,42 @@ export default function WhyHydraWay() {
                       {b(`items.${key}.description`)}
                     </p>
                   </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Advantages ── */}
+      <div className="bg-white py-24 lg:py-32">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+          <ScrollReveal className="mb-14 text-center lg:mb-16">
+            <div className="mb-4 flex items-center justify-center gap-3">
+              <div className="h-px w-8 bg-gradient-to-r from-transparent to-brand-red" />
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-brand-red">
+                {a("label")}
+              </span>
+              <div className="h-px w-8 bg-gradient-to-l from-transparent to-brand-red" />
+            </div>
+            <h2 className="font-heading text-4xl font-extrabold tracking-tight text-navy sm:text-5xl">
+              {a("title")}
+            </h2>
+          </ScrollReveal>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {advantages.map(({ key, icon: Icon, color, bg }, i) => (
+              <ScrollReveal key={key} delay={i * 100}>
+                <div className="group flex h-full flex-col items-center gap-4 rounded-2xl border border-navy/[0.05] bg-ice-light/30 p-7 text-center transition-all duration-300 hover:border-navy/[0.1] hover:shadow-lg hover:shadow-navy/[0.03]">
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${bg} transition-transform duration-300 group-hover:scale-110`}>
+                    <Icon size={26} className={color} strokeWidth={1.5} />
+                  </div>
+                  <h3 className="font-heading text-lg font-bold text-navy">
+                    {a(`items.${key}.title`)}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-navy/45">
+                    {a(`items.${key}.description`)}
+                  </p>
                 </div>
               </ScrollReveal>
             ))}

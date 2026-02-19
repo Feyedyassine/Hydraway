@@ -124,11 +124,11 @@ export default function Navbar() {
         <div className="flex h-full flex-col items-center justify-center gap-8">
           {navLinks.map((link, i) => {
             const classes = "font-heading text-3xl font-bold text-white transition-all hover:text-gradient";
+            const delay = mobileOpen ? `${i * 80}ms` : "0ms";
             const style = {
-              transitionDelay: mobileOpen ? `${i * 80}ms` : "0ms",
               opacity: mobileOpen ? 1 : 0,
               transform: mobileOpen ? "translateY(0)" : "translateY(20px)",
-              transition: "opacity 0.4s ease, transform 0.4s ease, color 0.2s ease",
+              transition: `opacity 0.4s ease ${delay}, transform 0.4s ease ${delay}, color 0.2s ease ${delay}`,
             };
             return link.isRoute ? (
               <Link
@@ -157,10 +157,11 @@ export default function Navbar() {
             onClick={() => setMobileOpen(false)}
             className="mt-4 rounded-full bg-gradient-to-r from-brand-red to-brand-crimson px-8 py-3 text-lg font-semibold text-white shadow-lg shadow-brand-red/30"
             style={{
-              transitionDelay: mobileOpen ? "320ms" : "0ms",
               opacity: mobileOpen ? 1 : 0,
               transform: mobileOpen ? "translateY(0)" : "translateY(20px)",
-              transition: "opacity 0.4s ease, transform 0.4s ease",
+              transition: mobileOpen
+                ? "opacity 0.4s ease 320ms, transform 0.4s ease 320ms"
+                : "opacity 0.4s ease 0ms, transform 0.4s ease 0ms",
             }}
           >
             {t("order")}
