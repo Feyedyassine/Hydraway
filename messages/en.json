@@ -1,0 +1,264 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "about": "About",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "cart": "Cart",
+    "order": "Order"
+  },
+  "hero": {
+    "badge": "Premium Electrolytes",
+    "title": "Hydrate better.",
+    "titleAccent": "Live better.",
+    "description": "The smart hydration solution, sugar-free, enriched with essential vitamins and minerals. Designed for sport, hot climates, and your daily life.",
+    "cta": "Discover",
+    "ctaSecondary": "Learn more",
+    "stats": {
+      "electrolytes": "Electrolytes",
+      "sugarFree": "Sugar-free",
+      "vitamins": "+Vitamins",
+      "vegan": "Vegan"
+    }
+  },
+  "product": {
+    "title": "Our Product",
+    "subtitle": "HydraWay Red Berries",
+    "description": "15 electrolyte sticks with red berries flavor. Soluble format, practical and delicious.",
+    "features": {
+      "sticks": "15 sticks per box",
+      "soluble": "Water-soluble",
+      "sugarFree": "Sugar-free",
+      "glutenFree": "Gluten-free",
+      "vegan": "Vegan",
+      "colorant": "With colorant"
+    },
+    "price": "Price",
+    "addToCart": "Add to cart",
+    "outOfStock": "Out of stock",
+    "recommendation": "1 to 2 sticks per day",
+    "supplement": "Dietary supplement · Not a substitute for medical treatment",
+    "certifications": {
+      "title": "Certified production",
+      "gmp": "GMP – 21 CFR Part 111",
+      "fssc": "FSSC 22000",
+      "tagline": "Local production. International standards."
+    }
+  },
+  "benefits": {
+    "title": "When to use HydraWay?",
+    "subtitle": "Your body will tell you",
+    "items": {
+      "sport": {
+        "title": "During exercise",
+        "description": "You sweat, you lose minerals. One stick before or during activity and your body stays balanced."
+      },
+      "heat": {
+        "title": "When it's hot",
+        "description": "Heat dehydrates you without you feeling it. One stick in your bottle and you stay sharp all day."
+      },
+      "recovery": {
+        "title": "To recover",
+        "description": "Night out, short sleep or a bout of dehydration. One stick in cold water to find your balance again."
+      }
+    }
+  },
+  "science": {
+    "label": "The science",
+    "title": "Electrolytes: at the heart of hydration",
+    "description": "Drinking water is essential. But without electrolytes, hydric balance isn't optimal. Electrolytes are minerals present in body fluids, capable of conducting electrical signals necessary for the normal functioning of the body.",
+    "minerals": {
+      "title": "Essential minerals",
+      "sodium": { "name": "Sodium", "symbol": "Na" },
+      "potassium": { "name": "Potassium", "symbol": "K" },
+      "magnesium": { "name": "Magnesium", "symbol": "Mg" },
+      "chloride": { "name": "Chloride", "symbol": "Cl" }
+    },
+    "functions": {
+      "title": "Why are they essential?",
+      "items": [
+        "Regulation of fluid volumes",
+        "Optimal cellular exchanges",
+        "Normal muscle activity",
+        "Efficient nerve transmission"
+      ]
+    }
+  },
+  "formulation": {
+    "label": "What's inside",
+    "title": "Every stick works for you",
+    "minerals": {
+      "title": "Essential minerals",
+      "description": "Sodium, potassium, magnesium. What your body loses when you sweat, we put back.",
+      "items": [
+        "Rebalance your fluids after effort",
+        "Prevent cramps and muscle fatigue",
+        "Maintain deep hydration, not just surface level"
+      ]
+    },
+    "vitamins": {
+      "title": "Targeted vitamins",
+      "description": "Not a random cocktail. Vitamins chosen for what they actually do.",
+      "items": [
+        "Turn what you eat into usable energy",
+        "Reduce the feeling of fatigue within hours",
+        "Support your focus and nervous system"
+      ]
+    }
+  },
+  "positioning": {
+    "label": "Positioning",
+    "title": "Designed for every situation",
+    "contexts": {
+      "medical": "Specific medical use",
+      "sport": "Physical activity",
+      "heat": "Heat exposure",
+      "sweat": "Prolonged sweating"
+    },
+    "insight": "Proper hydration is the difference between a gold medal and a participation trophy.",
+    "source": "Michael Phelps",
+    "sourceTitle": "23x Olympic Gold Medalist"
+  },
+  "howToUse": {
+    "title": "How to use HydraWay",
+    "subtitle": "Simple, fast, effective",
+    "steps": {
+      "open": {
+        "title": "Open",
+        "description": "Tear open a HydraWay stick"
+      },
+      "pour": {
+        "title": "Pour",
+        "description": "Pour into 250-500ml of cold water"
+      },
+      "mix": {
+        "title": "Mix",
+        "description": "Stir and enjoy"
+      }
+    },
+    "recommendation": "Recommendation: 1 to 2 sticks per day"
+  },
+  "testimonials": {
+    "title": "What our customers say",
+    "items": [
+      {
+        "name": "Sami B.",
+        "role": "Padel Player",
+        "text": "Since I started using HydraWay, my performance has significantly improved. No more cramps during matches!"
+      },
+      {
+        "name": "Amira K.",
+        "role": "Fitness Coach",
+        "text": "I recommend HydraWay to all my clients. It's the best hydration solution available in Tunisia."
+      },
+      {
+        "name": "Yassine M.",
+        "role": "Runner",
+        "text": "The red berries flavor is incredible and it dissolves instantly. My essential for every run."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ready to hydrate better?",
+    "description": "Order your HydraWay box and discover the difference.",
+    "button": "Order now",
+    "shipping": "Delivery throughout Tunisia"
+  },
+  "about": {
+    "title": "Our Story",
+    "subtitle": "Born from a simple observation",
+    "intro": "In hot climates and active lifestyles, modern hydration needs to be smarter than water alone.",
+    "story": {
+      "title": "The HydraWay Story",
+      "p1": "HYDRAWAY is a premium rehydration brand born from a simple observation: in hot climates and active lifestyles, modern hydration needs to be smarter than water alone.",
+      "p2": "We developed a practical, sugar-free electrolyte solution designed for sport, extreme heat, and recovery after a night out.",
+      "p3": "Our ambition is clear: to offer an elegant, effective alternative tailored to the North African market, with a vision of expansion across the Maghreb and Africa.",
+      "tagline": "HYDRAWAY combines science, simplicity, and lifestyle."
+    },
+    "mission": {
+      "title": "Our Mission",
+      "description": "Make optimal hydration accessible to everyone by combining science, simplicity, and lifestyle."
+    },
+    "quality": {
+      "title": "Quality & Manufacturing",
+      "description": "HydraWay is manufactured in Tunisia in a certified production facility, ensuring process control, traceability, and food safety.",
+      "gmp": "GMP Certified – 21 CFR Part 111",
+      "fssc": "FSSC 22000 Certified",
+      "local": "Local Tunisian production"
+    },
+    "values": {
+      "title": "Our Values",
+      "science": {
+        "title": "Science",
+        "description": "Formulation based on sports medicine recommendations and electrolyte balance studies."
+      },
+      "simplicity": {
+        "title": "Simplicity",
+        "description": "A soluble stick format, easy to carry and use in your daily life."
+      },
+      "lifestyle": {
+        "title": "Lifestyle",
+        "description": "A brand that naturally fits into an active, healthy way of life."
+      },
+      "local": {
+        "title": "Local",
+        "description": "Developed and manufactured in Tunisia, for the Tunisian market and beyond."
+      }
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about HydraWay",
+    "items": [
+      {
+        "question": "What is HydraWay?",
+        "answer": "HydraWay is a premium electrolyte drink in soluble stick format. Each stick contains a balanced mix of sodium, potassium, magnesium, and vitamins for optimal hydration."
+      },
+      {
+        "question": "How many sticks can I take per day?",
+        "answer": "We recommend 1 to 2 sticks per day. Dissolve one stick in 250 to 500 ml of cold water according to your taste preferences. Adjust your intake based on your activity level and weather conditions."
+      },
+      {
+        "question": "Does HydraWay contain sugar?",
+        "answer": "No, HydraWay is sugar-free. Our formula is designed to provide effective hydration without the extra calories from sugar."
+      },
+      {
+        "question": "Is HydraWay suitable for vegans?",
+        "answer": "Yes, HydraWay is gluten-free and suitable for vegan diets. No animal-derived ingredients are used in our formulation."
+      },
+      {
+        "question": "When should I use HydraWay?",
+        "answer": "HydraWay is ideal for intense sport, hot weather days, recovery after a night out, or simply to maintain proper hydric balance in your daily life."
+      },
+      {
+        "question": "Where is HydraWay manufactured?",
+        "answer": "HydraWay is manufactured in Tunisia in a production facility certified GMP (21 CFR Part 111) and FSSC 22000, ensuring the highest quality and food safety standards."
+      },
+      {
+        "question": "What are the delivery times?",
+        "answer": "We deliver throughout Tunisia (all 24 governorates). Delivery times are generally 2 to 5 business days depending on your location."
+      },
+      {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept online payment via Flouci as well as Cash on Delivery (COD) for your convenience."
+      },
+      {
+        "question": "Is HydraWay a medication?",
+        "answer": "No, HydraWay is a dietary supplement. It is not a medication and does not replace medical treatment. If in doubt, consult your doctor."
+      },
+      {
+        "question": "What does HydraWay taste like?",
+        "answer": "HydraWay comes in a Red Berries flavor — a fresh, pleasant taste that dissolves instantly in cold water. No artificial aftertaste."
+      }
+    ]
+  },
+  "footer": {
+    "description": "The premium hydration solution in Tunisia. Electrolytes, vitamins and essential minerals.",
+    "navigation": "Navigation",
+    "legal": "Legal Mentions",
+    "contact": "Contact",
+    "rights": "All rights reserved.",
+    "madeIn": "Made in Tunisia 🇹🇳"
+  }
+}

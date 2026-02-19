@@ -1,0 +1,291 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "Hydra Way" [ref=e4] [cursor=pointer]:
+        - /url: /en
+        - generic [ref=e5]: Hydra
+        - generic [ref=e6]: Way
+      - generic [ref=e7]:
+        - link "Products" [ref=e8] [cursor=pointer]:
+          - /url: /#produit
+          - text: Products
+        - link "About" [ref=e9] [cursor=pointer]:
+          - /url: /en/about
+          - text: About
+        - link "FAQ" [ref=e10] [cursor=pointer]:
+          - /url: /en/faq
+          - text: FAQ
+        - link "Contact" [ref=e11] [cursor=pointer]:
+          - /url: /#contact
+          - text: Contact
+      - generic [ref=e12]:
+        - button "FR" [ref=e13]
+        - button [ref=e14]:
+          - img [ref=e15]
+        - link "Order" [ref=e18] [cursor=pointer]:
+          - /url: "#commander"
+  - main [ref=e19]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e31]: Premium Electrolytes
+        - heading "Hydrate better. Live better." [level=1] [ref=e32]:
+          - generic [ref=e33]: Hydrate better.
+          - generic [ref=e34]: Live better.
+        - paragraph [ref=e35]: The smart hydration solution, sugar-free, enriched with essential vitamins and minerals. Designed for sport, hot climates, and your daily life.
+        - generic [ref=e36]:
+          - link "Discover" [ref=e37] [cursor=pointer]:
+            - /url: "#produit"
+            - generic [ref=e38]: Discover
+            - img [ref=e39]
+          - link "Learn more" [ref=e42] [cursor=pointer]:
+            - /url: "#avantages"
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - img [ref=e45]
+            - generic [ref=e48]: Electrolytes
+          - generic [ref=e49]:
+            - img [ref=e50]
+            - generic [ref=e53]: Sugar-free
+          - generic [ref=e54]:
+            - img [ref=e55]
+            - generic [ref=e57]: +Vitamins
+          - generic [ref=e58]:
+            - img [ref=e59]
+            - generic [ref=e62]: Vegan
+      - generic [ref=e63]:
+        - img "HydraWay Red Berries" [ref=e67]
+        - generic [ref=e68]: 15 sticks
+        - generic [ref=e69]: Red Berries
+    - generic [ref=e74]:
+      - generic [ref=e76]:
+        - img "HydraWay Sticks" [ref=e78]
+        - img "HydraWay Stick" [ref=e80]
+      - generic [ref=e83]:
+        - generic [ref=e86]: Our Product
+        - heading "HydraWay Red Berries" [level=2] [ref=e87]
+        - paragraph [ref=e88]: 15 electrolyte sticks with red berries flavor. Soluble format, practical and delicious.
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - img [ref=e92]
+            - generic [ref=e96]: 15 sticks per box
+          - generic [ref=e97]:
+            - img [ref=e99]
+            - generic [ref=e102]: Sugar-free
+          - generic [ref=e103]:
+            - img [ref=e105]
+            - generic [ref=e116]: Gluten-free
+          - generic [ref=e117]:
+            - img [ref=e119]
+            - generic [ref=e122]: Vegan-friendly
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - text: Price
+            - generic [ref=e125]:
+              - generic [ref=e126]: "29.900"
+              - generic [ref=e127]: TND
+          - button "Add to cart" [ref=e128]:
+            - img [ref=e129]
+            - text: Add to cart
+    - generic [ref=e135]:
+      - generic [ref=e136]:
+        - generic [ref=e139]: Optimal hydration, every moment
+        - heading "Why HydraWay?" [level=2] [ref=e141]
+      - generic [ref=e142]:
+        - generic [ref=e144]:
+          - img [ref=e147]
+          - heading "Intense Sport" [level=3] [ref=e153]
+          - paragraph [ref=e154]: Compensate for water and electrolyte loss during physical activity.
+        - generic [ref=e156]:
+          - img [ref=e159]
+          - heading "Hot Weather" [level=3] [ref=e165]
+          - paragraph [ref=e166]: Stay hydrated during hot days with elevated perspiration.
+        - generic [ref=e168]:
+          - img [ref=e171]
+          - heading "Daily Life" [level=3] [ref=e173]
+          - paragraph [ref=e174]: Maintain your hydric balance throughout the day.
+        - generic [ref=e176]:
+          - img [ref=e179]
+          - heading "Recovery" [level=3] [ref=e185]
+          - paragraph [ref=e186]: Regain your energy after a night out or prolonged effort.
+    - generic [ref=e193]:
+      - generic [ref=e194]:
+        - generic [ref=e196]:
+          - generic [ref=e199]: The science
+          - 'heading "Electrolytes: at the heart of hydration" [level=2] [ref=e200]'
+          - paragraph [ref=e201]: Drinking water is essential. But without electrolytes, hydric balance isn't optimal. Electrolytes are minerals present in body fluids, capable of conducting electrical signals necessary for the normal functioning of the body.
+        - generic [ref=e203]:
+          - heading "Essential minerals" [level=3] [ref=e204]
+          - generic [ref=e205]:
+            - generic [ref=e206]:
+              - generic [ref=e208]: Na
+              - generic [ref=e209]: Sodium
+            - generic [ref=e210]:
+              - generic [ref=e212]: K
+              - generic [ref=e213]: Potassium
+            - generic [ref=e214]:
+              - generic [ref=e216]: Mg
+              - generic [ref=e217]: Magnesium
+            - generic [ref=e218]:
+              - generic [ref=e220]: Cl
+              - generic [ref=e221]: Chloride
+        - generic [ref=e223]:
+          - heading "Why are they essential?" [level=3] [ref=e224]
+          - generic [ref=e225]:
+            - generic [ref=e226]:
+              - img [ref=e228]
+              - generic [ref=e230]: Regulation of fluid volumes
+            - generic [ref=e231]:
+              - img [ref=e233]
+              - generic [ref=e235]: Optimal cellular exchanges
+            - generic [ref=e236]:
+              - img [ref=e238]
+              - generic [ref=e240]: Normal muscle activity
+            - generic [ref=e241]:
+              - img [ref=e243]
+              - generic [ref=e245]: Efficient nerve transmission
+      - generic [ref=e247]:
+        - img "HydraWay electrolytes" [ref=e250]
+        - generic [ref=e251]: Na⁺ K⁺ Mg²⁺
+        - generic [ref=e252]: +Vitamines
+    - generic [ref=e258]:
+      - generic [ref=e259]:
+        - generic [ref=e262]: Simple, fast, effective
+        - heading "How to use HydraWay" [level=2] [ref=e264]
+      - generic [ref=e265]:
+        - generic [ref=e266]:
+          - generic [ref=e269]:
+            - generic [ref=e271]: "01"
+            - generic [ref=e272]:
+              - heading "Open" [level=3] [ref=e273]
+              - paragraph [ref=e274]: Tear open a HydraWay stick
+          - generic [ref=e276]:
+            - generic [ref=e278]: "02"
+            - generic [ref=e279]:
+              - heading "Pour" [level=3] [ref=e280]
+              - paragraph [ref=e281]: Pour into 250-500ml of water
+          - generic [ref=e283]:
+            - generic [ref=e285]: "03"
+            - generic [ref=e286]:
+              - heading "Mix" [level=3] [ref=e287]
+              - paragraph [ref=e288]: Stir and enjoy
+          - generic [ref=e292]: "Recommendation: 1 to 2 sticks per day"
+        - generic:
+          - generic:
+            - generic:
+              - img "Pour HydraWay"
+            - img "HydraWay drink" [ref=e295]
+    - generic [ref=e297]:
+      - heading "What our customers say" [level=2] [ref=e299]
+      - generic [ref=e300]:
+        - generic [ref=e302]:
+          - img [ref=e304]
+          - generic [ref=e307]:
+            - img [ref=e308]
+            - img [ref=e310]
+            - img [ref=e312]
+            - img [ref=e314]
+            - img [ref=e316]
+          - paragraph [ref=e318]: “Since I started using HydraWay, my performance has significantly improved. No more cramps during matches!”
+          - generic [ref=e319]:
+            - generic [ref=e321]: S
+            - generic [ref=e322]:
+              - paragraph [ref=e323]: Sami B.
+              - paragraph [ref=e324]: Padel Player
+        - generic [ref=e326]:
+          - img [ref=e328]
+          - generic [ref=e331]:
+            - img [ref=e332]
+            - img [ref=e334]
+            - img [ref=e336]
+            - img [ref=e338]
+            - img [ref=e340]
+          - paragraph [ref=e342]: “I recommend HydraWay to all my clients. It's the best hydration solution available in Tunisia.”
+          - generic [ref=e343]:
+            - generic [ref=e345]: A
+            - generic [ref=e346]:
+              - paragraph [ref=e347]: Amira K.
+              - paragraph [ref=e348]: Fitness Coach
+        - generic [ref=e350]:
+          - img [ref=e352]
+          - generic [ref=e355]:
+            - img [ref=e356]
+            - img [ref=e358]
+            - img [ref=e360]
+            - img [ref=e362]
+            - img [ref=e364]
+          - paragraph [ref=e366]: “The red berries flavor is incredible and it dissolves instantly. My essential for every run.”
+          - generic [ref=e367]:
+            - generic [ref=e369]: "Y"
+            - generic [ref=e370]:
+              - paragraph [ref=e371]: Yassine M.
+              - paragraph [ref=e372]: Runner
+    - generic [ref=e373]:
+      - img "HydraWay lifestyle" [ref=e375]
+      - generic [ref=e380]:
+        - heading "Ready to hydrate better?" [level=2] [ref=e382]
+        - paragraph [ref=e384]: Order your HydraWay box and discover the difference.
+        - generic [ref=e386]:
+          - link "Order now" [ref=e387] [cursor=pointer]:
+            - /url: "#produit"
+            - text: Order now
+            - img [ref=e388]
+          - generic [ref=e390]:
+            - img [ref=e391]
+            - generic [ref=e396]: Delivery throughout Tunisia
+  - contentinfo [ref=e397]:
+    - generic [ref=e399]:
+      - generic [ref=e400]:
+        - generic [ref=e401]:
+          - generic [ref=e402]:
+            - generic [ref=e403]: Hydra
+            - generic [ref=e404]: Way
+          - paragraph [ref=e405]: The premium hydration solution in Tunisia. Electrolytes, vitamins and essential minerals.
+          - generic [ref=e406]:
+            - link [ref=e407] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e408]
+            - link [ref=e411] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e412]
+            - link [ref=e414] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e415]
+        - generic [ref=e418]:
+          - heading "Navigation" [level=4] [ref=e419]
+          - list [ref=e420]:
+            - listitem [ref=e421]:
+              - link "Home" [ref=e422] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e423]:
+              - link "Products" [ref=e424] [cursor=pointer]:
+                - /url: "#produit"
+            - listitem [ref=e425]:
+              - link "About" [ref=e426] [cursor=pointer]:
+                - /url: "#avantages"
+            - listitem [ref=e427]:
+              - link "Contact" [ref=e428] [cursor=pointer]:
+                - /url: "#contact"
+        - generic [ref=e429]:
+          - heading "Legal Mentions" [level=4] [ref=e430]
+          - list [ref=e431]:
+            - listitem [ref=e432]:
+              - link "Legal Mentions" [ref=e433] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e434]:
+              - link "FAQ" [ref=e435] [cursor=pointer]:
+                - /url: /faq
+        - generic [ref=e436]:
+          - heading "Contact" [level=4] [ref=e437]
+          - generic [ref=e438]:
+            - link "info@hydraway.com.tn" [ref=e439] [cursor=pointer]:
+              - /url: mailto:info@hydraway.com.tn
+              - img [ref=e440]
+              - text: info@hydraway.com.tn
+            - generic [ref=e443]:
+              - img [ref=e444]
+              - generic [ref=e447]: Tunisie
+      - generic [ref=e448]:
+        - paragraph [ref=e449]: © 2026 HydraWay. All rights reserved.
+        - paragraph [ref=e450]: Made in Tunisia 🇹🇳
+  - button "Open Next.js Dev Tools" [ref=e456] [cursor=pointer]:
+    - img [ref=e457]
