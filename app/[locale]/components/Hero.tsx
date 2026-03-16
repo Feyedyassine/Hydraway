@@ -69,7 +69,7 @@ export default function Hero() {
           >
             <a
               href="#produit"
-              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-brand-red to-brand-crimson px-8 py-4 text-base font-semibold text-white shadow-xl shadow-brand-red/20 transition-all duration-300 hover:shadow-brand-red/40 hover:brightness-110"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full border border-brand-red/60 bg-transparent px-8 py-4 text-base font-semibold text-white transition-all duration-300 hover:bg-brand-red/10"
             >
               <span className="relative z-10">{t("cta")}</span>
               <svg
@@ -116,9 +116,9 @@ export default function Hero() {
           <div className="animate-spin-slow absolute h-[340px] w-[340px] rounded-full border border-dashed border-white/[0.06] lg:h-[440px] lg:w-[440px]" />
 
           {/* Product image */}
-          <div className="animate-float relative z-10">
+          <div className="relative z-10 pr-6">
             <Image
-              src="/images/product-box.jpeg"
+              src="/images/hydraway_pack.png"
               alt="HydraWay Red Berries"
               width={480}
               height={480}
@@ -128,17 +128,6 @@ export default function Hero() {
             />
           </div>
 
-          {/* Floating mini badges around product */}
-          <div
-            className="animate-float-delayed glass-card absolute -top-2 right-4 z-20 rounded-xl px-3 py-2 lg:right-12 lg:top-8"
-          >
-            <span className="text-xs font-bold text-white/80">15 sticks</span>
-          </div>
-          <div
-            className="animate-float absolute bottom-8 left-0 z-20 rounded-xl bg-gradient-to-r from-brand-red to-accent-pink px-3 py-2 shadow-lg shadow-brand-red/30 lg:bottom-16 lg:left-4"
-          >
-            <span className="text-xs font-bold text-white">Red Berries</span>
-          </div>
         </div>
       </div>
 

@@ -1,0 +1,328 @@
+"use client";
+
+import { useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
+import { useCart } from "@/lib/cart-context";
+import { Link } from "@/i18n/navigation";
+import Image from "next/image";
+import { CreditCard, Banknote, ArrowLeft, ShoppingBag, ChevronDown } from "lucide-react";
+import Navbar from "../components/Navbar";
+import CartDrawer from "../components/CartDrawer";
+
+const GOVERNORATES = [
+  "Ariana", "Béja", "Ben Arous", "Bizerte", "Gabès", "Gafsa", "Jendouba",
+  "Kairouan", "Kasserine", "Kébili", "Le Kef", "Mahdia", "La Manouba",
+  "Médenine", "Monastir", "Nabeul", "Sfax", "Sidi Bouzid", "Siliana",
+  "Sousse", "Tataouine", "Tozeur", "Tunis", "Zaghouan",
+];
+
+export default function CheckoutPage() {
+  const t = useTranslations("checkout");
+  const locale = useLocale();
+  const { items, total, clearCart } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "flouci">("cod");
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; orderId?: number } | null>(null);
+
+  const [client, setClient] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    governorate: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const orderItems = items.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+      }));
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client, items: orderItems, paymentMethod }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Order failed");
+        return;
+      }
+
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
+
+      clearCart();
+      setResult({ success: true, orderId: data.orderId });
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Success state
+  if (result?.success) {
+    return (
+      <>
+        <Navbar />
+        <CartDrawer />
+        <div className="flex min-h-screen items-center justify-center bg-ice-light/30 px-5 pt-24">
+          <div className="max-w-md text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+              <ShoppingBag size={32} className="text-green-600" />
+            </div>
+            <h1 className="mb-3 font-heading text-3xl font-bold text-navy">
+              {t("successTitle")}
+            </h1>
+            <p className="mb-8 text-navy/50">
+              {t("successMessage", { id: result.orderId ?? 0 })}
+            </p>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-light"
+            >
+              <ArrowLeft size={16} />
+              {t("backHome")}
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Empty cart
+  if (items.length === 0 && !result) {
+    return (
+      <>
+        <Navbar />
+        <CartDrawer />
+        <div className="flex min-h-screen items-center justify-center bg-ice-light/30 px-5 pt-24">
+          <div className="max-w-md text-center">
+            <ShoppingBag size={48} className="mx-auto mb-4 text-navy/10" />
+            <h1 className="mb-3 font-heading text-2xl font-bold text-navy">
+              {t("emptyCart")}
+            </h1>
+            <p className="mb-6 text-navy/40">{t("emptyCartMessage")}</p>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-light"
+            >
+              <ArrowLeft size={16} />
+              {t("continueShopping")}
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <CartDrawer />
+      <div className="min-h-screen bg-ice-light/30 pt-28 pb-16">
+        <div className="mx-auto max-w-5xl px-5 lg:px-8">
+          {/* Back link */}
+          <Link
+            href="/"
+            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-navy/40 transition-colors hover:text-navy"
+          >
+            <ArrowLeft size={16} />
+            {t("continueShopping")}
+          </Link>
+
+          <h1 className="mb-8 font-heading text-3xl font-extrabold text-navy sm:text-4xl">
+            {t("title")}
+          </h1>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
+            {/* Left — Form */}
+            <form onSubmit={handleSubmit} className="lg:col-span-3">
+              <div className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
+                <h2 className="mb-6 text-lg font-bold text-navy">{t("deliveryInfo")}</h2>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-navy/60">
+                      {t("firstName")} *
+                    </label>
+                    <input
+                      required
+                      value={client.firstName}
+                      onChange={(e) => setClient({ ...client, firstName: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-navy"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-navy/60">
+                      {t("lastName")} *
+                    </label>
+                    <input
+                      required
+                      value={client.lastName}
+                      onChange={(e) => setClient({ ...client, lastName: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-navy"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-navy/60">
+                      {t("phone")} *
+                    </label>
+                    <input
+                      required
+                      type="tel"
+                      value={client.phone}
+                      onChange={(e) => setClient({ ...client, phone: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-navy"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-navy/60">
+                      {t("email")}
+                    </label>
+                    <input
+                      type="email"
+                      value={client.email}
+                      onChange={(e) => setClient({ ...client, email: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-navy"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="mb-1.5 block text-sm font-medium text-navy/60">
+                      {t("address")} *
+                    </label>
+                    <input
+                      required
+                      value={client.address}
+                      onChange={(e) => setClient({ ...client, address: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-navy"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-navy/60">
+                      {t("city")} *
+                    </label>
+                    <input
+                      required
+                      value={client.city}
+                      onChange={(e) => setClient({ ...client, city: e.target.value })}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-navy"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-navy/60">
+                      {t("governorate")} *
+                    </label>
+                    <div className="relative">
+                      <select
+                        required
+                        value={client.governorate}
+                        onChange={(e) => setClient({ ...client, governorate: e.target.value })}
+                        className="w-full appearance-none rounded-xl border border-gray-200 px-4 py-3 pr-10 text-sm outline-none transition-colors focus:border-navy"
+                      >
+                        <option value="">{t("selectGovernorate")}</option>
+                        {GOVERNORATES.map((g) => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-navy/30" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment method */}
+                <h2 className="mb-4 mt-8 text-lg font-bold text-navy">{t("paymentMethod")}</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cod")}
+                    className={`flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-4 text-sm font-semibold transition-all ${
+                      paymentMethod === "cod"
+                        ? "border-navy bg-navy/5 text-navy"
+                        : "border-gray-200 text-gray-400 hover:border-gray-300"
+                    }`}
+                  >
+                    <Banknote size={20} />
+                    {t("cod")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("flouci")}
+                    className={`flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-4 text-sm font-semibold transition-all ${
+                      paymentMethod === "flouci"
+                        ? "border-navy bg-navy/5 text-navy"
+                        : "border-gray-200 text-gray-400 hover:border-gray-300"
+                    }`}
+                  >
+                    <CreditCard size={20} />
+                    {t("flouci")}
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="mt-8 w-full rounded-full bg-navy py-4 text-base font-semibold text-white transition-colors hover:bg-navy-light disabled:opacity-50"
+                >
+                  {submitting ? t("processing") : t("placeOrder")}
+                </button>
+              </div>
+            </form>
+
+            {/* Right — Order summary */}
+            <div className="lg:col-span-2">
+              <div className="sticky top-28 rounded-2xl bg-white p-6 shadow-sm">
+                <h2 className="mb-5 text-lg font-bold text-navy">{t("summary")}</h2>
+
+                <div className="space-y-4">
+                  {items.map((item) => (
+                    <div key={item.productId} className="flex gap-3">
+                      {item.image && (
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-50">
+                          <Image
+                            src={item.image}
+                            alt={locale === "fr" ? item.nameFr : item.name}
+                            width={56}
+                            height={56}
+                            className="h-full w-full object-contain p-1"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-navy">
+                          {locale === "fr" ? item.nameFr : item.name}
+                        </p>
+                        <p className="text-xs text-navy/40">x{item.quantity}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-navy">
+                        {(item.price * item.quantity).toFixed(2)} TND
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="my-5 h-px bg-gray-100" />
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-navy/60">{t("total")}</span>
+                  <span className="text-2xl font-bold text-navy">{total.toFixed(2)} TND</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/navigation";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { Menu, X, ShoppingBag, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import { useCart } from "@/lib/cart-context";
 
 export default function Navbar() {
   const t = useTranslations("nav");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const { openDrawer, count } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -20,10 +24,25 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const switchLocale = () => {
-    const next = locale === "fr" ? "en" : "fr";
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const switchLocale = (next: string) => {
     router.replace(pathname, { locale: next });
+    setLangOpen(false);
   };
+
+  const locales = [
+    { code: "fr", label: "Français" },
+    { code: "en", label: "English" },
+  ];
 
   const navLinks: { href: string; label: string; isRoute?: boolean }[] = [
     { href: "/#produit", label: t("products") },
@@ -36,7 +55,7 @@ export default function Navbar() {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled
+          scrolled || pathname !== "/"
             ? "bg-navy/90 backdrop-blur-xl shadow-lg shadow-navy/20 py-3"
             : "bg-transparent py-5"
         }`}
@@ -81,26 +100,44 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            {/* Language toggle */}
-            <button
-              onClick={switchLocale}
-              className="relative overflow-hidden rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/80 transition-all hover:border-white/30 hover:text-white"
-            >
-              {locale === "fr" ? "EN" : "FR"}
-            </button>
+            {/* Language dropdown */}
+            <div ref={langRef} className="relative">
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-1 overflow-hidden rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/80 transition-all hover:border-white/30 hover:text-white"
+              >
+                {locale.toUpperCase()}
+                <ChevronDown size={12} className={`transition-transform duration-200 ${langOpen ? "rotate-180" : ""}`} />
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 mt-2 min-w-[120px] overflow-hidden rounded-xl border border-white/15 bg-navy/95 backdrop-blur-xl shadow-xl">
+                  {locales.map(({ code, label }) => (
+                    <button
+                      key={code}
+                      onClick={() => switchLocale(code)}
+                      className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-white/10 ${
+                        locale === code ? "text-white font-semibold" : "text-white/60"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Cart */}
-            <button className="relative rounded-full border border-white/15 p-2.5 text-white/80 transition-all hover:border-white/30 hover:text-white">
-              <ShoppingBag size={18} strokeWidth={1.5} />
-            </button>
-
-            {/* CTA */}
-            <a
-              href="#commander"
-              className="hidden rounded-full bg-gradient-to-r from-brand-red to-brand-crimson px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-red/25 transition-all hover:shadow-brand-red/40 hover:brightness-110 md:block"
+            <button
+              onClick={openDrawer}
+              className="relative rounded-full border border-white/15 p-2.5 text-white/80 transition-all hover:border-white/30 hover:text-white"
             >
-              {t("order")}
-            </a>
+              <ShoppingBag size={18} strokeWidth={1.5} />
+              {count > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-brand-red text-[10px] font-bold text-white">
+                  {count}
+                </span>
+              )}
+            </button>
 
             {/* Mobile toggle */}
             <button
@@ -152,20 +189,6 @@ export default function Navbar() {
               </a>
             );
           })}
-          <a
-            href="#commander"
-            onClick={() => setMobileOpen(false)}
-            className="mt-4 rounded-full bg-gradient-to-r from-brand-red to-brand-crimson px-8 py-3 text-lg font-semibold text-white shadow-lg shadow-brand-red/30"
-            style={{
-              opacity: mobileOpen ? 1 : 0,
-              transform: mobileOpen ? "translateY(0)" : "translateY(20px)",
-              transition: mobileOpen
-                ? "opacity 0.4s ease 320ms, transform 0.4s ease 320ms"
-                : "opacity 0.4s ease 0ms, transform 0.4s ease 0ms",
-            }}
-          >
-            {t("order")}
-          </a>
         </div>
       </div>
     </>

@@ -105,20 +105,6 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Mission */}
-        <section className="bg-gradient-to-b from-ice-light/30 to-white py-24 lg:py-32">
-          <div className="mx-auto max-w-7xl px-5 lg:px-8">
-            <ScrollReveal className="mx-auto max-w-3xl text-center">
-              <h2 className="mb-6 font-heading text-4xl font-extrabold tracking-tight text-navy sm:text-5xl">
-                {t("mission.title")}
-              </h2>
-              <p className="text-xl leading-relaxed text-navy/50">
-                {t("mission.description")}
-              </p>
-            </ScrollReveal>
-          </div>
-        </section>
-
         {/* Values */}
         <section className="py-24 lg:py-32">
           <div className="mx-auto max-w-7xl px-5 lg:px-8">

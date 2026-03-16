@@ -6,12 +6,14 @@ import ScienceSection from "./components/ScienceSection";
 import Testimonials from "./components/Testimonials";
 import FAQSection from "./components/FAQSection";
 import CTASection from "./components/CTASection";
+import CartDrawer from "./components/CartDrawer";
 import Footer from "./components/Footer";
 
 export default function HomePage() {
   return (
     <>
       <Navbar />
+      <CartDrawer />
       <main>
         <Hero />
         <ProductShowcase />

@@ -47,7 +47,7 @@ export default function NotFound() {
         {/* CTA */}
         <Link
           href="/"
-          className="mt-4 rounded-full bg-gradient-to-r from-brand-red to-brand-crimson px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-red/20 transition-all hover:shadow-brand-red/35 hover:brightness-110"
+          className="mt-4 rounded-full border border-brand-red/60 bg-transparent px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-brand-red/10"
         >
           Retour à l&apos;accueil
         </Link>

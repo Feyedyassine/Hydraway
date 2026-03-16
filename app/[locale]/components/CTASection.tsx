@@ -53,7 +53,7 @@ export default function CTASection() {
             <div className="flex flex-col items-center gap-5">
               <a
                 href="#produit"
-                className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-brand-red to-brand-crimson px-10 py-5 text-lg font-semibold text-white shadow-2xl shadow-brand-red/30 transition-all duration-300 hover:shadow-brand-red/50 hover:brightness-110"
+                className="group inline-flex items-center gap-3 rounded-full border border-brand-red/60 bg-transparent px-10 py-5 text-lg font-semibold text-white transition-all duration-300 hover:bg-brand-red/10"
               >
                 {t("button")}
                 <ArrowRight

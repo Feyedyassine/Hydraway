@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useCart } from "@/lib/cart-context";
 import Image from "next/image";
 import {
   Package,
@@ -28,10 +29,41 @@ const featureKeys = [
 
 const steps = ["open", "pour", "mix"] as const;
 
+interface Product {
+  id: number;
+  name: string;
+  nameFr: string;
+  price: number;
+  stock: number;
+  image: string | null;
+}
+
 export default function ProductShowcase() {
   const t = useTranslations("product");
   const h = useTranslations("howToUse");
+  const { addItem } = useCart();
   const [howToOpen, setHowToOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then(setProducts)
+      .catch(() => {});
+  }, []);
+
+  const handleAddToCart = () => {
+    const product = products[0];
+    if (!product) return;
+    addItem({
+      productId: product.id,
+      name: product.name,
+      nameFr: product.nameFr,
+      price: product.price,
+      stock: product.stock,
+      image: product.image,
+    });
+  };
 
   return (
     <section id="produit" className="relative overflow-hidden bg-white py-24 lg:py-32">
@@ -112,12 +144,16 @@ export default function ProductShowcase() {
                   </span>
                   <div className="flex items-baseline gap-2">
                     <span className="font-heading text-4xl font-extrabold text-navy">
-                      45.000
+                      {products[0]?.price.toFixed(3) ?? "—"}
                     </span>
                     <span className="text-lg font-semibold text-navy/40">TND</span>
                   </div>
                 </div>
-                <button className="group flex items-center gap-3 rounded-full bg-navy px-8 py-4 text-base font-semibold text-white shadow-lg shadow-navy/20 transition-all duration-300 hover:bg-navy-light hover:shadow-navy/30">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!products[0]}
+                  className="group flex items-center gap-3 rounded-full bg-navy px-8 py-4 text-base font-semibold text-white shadow-lg shadow-navy/20 transition-all duration-300 hover:bg-navy-light hover:shadow-navy/30 disabled:opacity-50"
+                >
                   <ShoppingCart size={18} strokeWidth={2} />
                   {t("addToCart")}
                 </button>
