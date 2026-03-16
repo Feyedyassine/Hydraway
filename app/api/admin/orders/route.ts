@@ -4,6 +4,16 @@ import { orders, orderItems, clients, products } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth";
 import { eq, desc } from "drizzle-orm";
 
+// Allowed transitions per status
+const TRANSITIONS: Record<string, string[]> = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["shipped", "cancelled"],
+  shipped: ["delivered", "returned"],
+  delivered: [],
+  cancelled: [],
+  returned: [],
+};
+
 // GET /api/admin/orders
 export async function GET() {
   try {
@@ -61,11 +71,46 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    // Fetch current order
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, body.id));
+
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Enforce valid transitions
+    const allowed = TRANSITIONS[order.status] || [];
+    if (!allowed.includes(body.status)) {
+      return NextResponse.json(
+        { error: `Cannot change from "${order.status}" to "${body.status}"` },
+        { status: 400 }
+      );
+    }
+
+    // Append to status history
+    const history = JSON.parse(order.statusHistory || "[]");
+    history.push({
+      from: order.status,
+      to: body.status,
+      at: new Date().toISOString(),
+    });
+
+    // Auto-mark COD payment as paid on delivery
+    const paymentUpdate =
+      body.status === "delivered" && order.paymentMethod === "cod"
+        ? { paymentStatus: "paid" as const }
+        : {};
+
     const [updated] = await db
       .update(orders)
       .set({
         status: body.status,
+        statusHistory: JSON.stringify(history),
         updatedAt: new Date().toISOString(),
+        ...paymentUpdate,
       })
       .where(eq(orders.id, body.id))
       .returning();

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { Plus, Pencil, Trash2, X, Search, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { useToast } from "../toast";
 
 interface Product {
   id: number;
@@ -26,12 +27,20 @@ const emptyForm = {
   active: true,
 };
 
+const PAGE_SIZE = 10;
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
 
   const fetchProducts = async () => {
     try {
@@ -45,6 +54,29 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const filtered = useMemo(() => {
+    return products.filter((p) => {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.nameFr.toLowerCase().includes(q);
+      const matchesStatus =
+        !statusFilter ||
+        (statusFilter === "active" && p.active) ||
+        (statusFilter === "inactive" && !p.active) ||
+        (statusFilter === "lowstock" && p.stock < 5);
+      return matchesSearch && matchesStatus;
+    });
+  }, [products, search, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
 
   const openNew = () => {
     setForm(emptyForm);
@@ -67,28 +99,76 @@ export default function ProductsPage() {
     setShowForm(true);
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setForm((f) => ({ ...f, image: data.path }));
+        toast.success("Image uploaded");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Upload failed");
+      }
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleSave = async () => {
     const method = editingId ? "PUT" : "POST";
     const body = editingId ? { ...form, id: editingId } : form;
 
-    await fetch("/api/admin/products", {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch("/api/admin/products", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    setShowForm(false);
-    fetchProducts();
+      if (res.ok) {
+        toast.success(editingId ? "Product updated" : "Product created");
+        setShowForm(false);
+        fetchProducts();
+      } else {
+        toast.error("Failed to save product");
+      }
+    } catch {
+      toast.error("Failed to save product");
+    }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this product?")) return;
-    await fetch("/api/admin/products", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    fetchProducts();
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        toast.success("Product deleted");
+        fetchProducts();
+      } else {
+        toast.error("Failed to delete product");
+      }
+    } catch {
+      toast.error("Failed to delete product");
+    }
   };
 
   if (loading) {
@@ -108,6 +188,30 @@ export default function ProductsPage() {
         </button>
       </div>
 
+      {/* Filters */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name..."
+            className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-gray-900"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
+        >
+          <option value="">All products</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="lowstock">Low stock (&lt; 5)</option>
+        </select>
+        <span className="text-sm text-gray-500">{filtered.length} products</span>
+      </div>
+
       {/* Product list */}
       <div className="overflow-hidden rounded-xl bg-white shadow-sm">
         <table className="w-full text-left text-sm">
@@ -121,14 +225,18 @@ export default function ProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => (
+            {paginated.map((p) => (
               <tr key={p.id} className="border-b last:border-0">
                 <td className="px-5 py-3">
                   <p className="font-medium text-gray-900">{p.name}</p>
                   <p className="text-xs text-gray-400">{p.nameFr}</p>
                 </td>
                 <td className="px-5 py-3 text-gray-700">{p.price.toFixed(2)} TND</td>
-                <td className="px-5 py-3 text-gray-700">{p.stock}</td>
+                <td className="px-5 py-3">
+                  <span className={p.stock < 5 ? "font-medium text-red-600" : "text-gray-700"}>
+                    {p.stock}
+                  </span>
+                </td>
                 <td className="px-5 py-3">
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -148,16 +256,41 @@ export default function ProductsPage() {
                 </td>
               </tr>
             ))}
-            {products.length === 0 && (
+            {paginated.length === 0 && (
               <tr>
                 <td colSpan={5} className="py-12 text-center text-gray-400">
-                  No products yet
+                  {products.length === 0 ? "No products yet" : "No products match your filters"}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between rounded-xl bg-white px-5 py-3 shadow-sm">
+          <span className="text-sm text-gray-500">
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal form */}
       {showForm && (
@@ -228,12 +361,34 @@ export default function ProductsPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">Image path</label>
-                  <input
-                    value={form.image}
-                    onChange={(e) => setForm({ ...form, image: e.target.value })}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
-                  />
+                  <label className="mb-1 block text-xs font-medium text-gray-500">Image</label>
+                  <div className="flex gap-2">
+                    <input
+                      value={form.image}
+                      onChange={(e) => setForm({ ...form, image: e.target.value })}
+                      placeholder="/images/..."
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="shrink-0 rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                      title="Upload image"
+                    >
+                      <Upload size={16} />
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  {uploading && (
+                    <p className="mt-1 text-xs text-gray-400">Uploading...</p>
+                  )}
                 </div>
               </div>
               <label className="flex items-center gap-2 text-sm">

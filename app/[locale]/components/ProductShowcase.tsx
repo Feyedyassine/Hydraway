@@ -151,11 +151,11 @@ export default function ProductShowcase() {
                 </div>
                 <button
                   onClick={handleAddToCart}
-                  disabled={!products[0]}
-                  className="group flex items-center gap-3 rounded-full bg-navy px-8 py-4 text-base font-semibold text-white shadow-lg shadow-navy/20 transition-all duration-300 hover:bg-navy-light hover:shadow-navy/30 disabled:opacity-50"
+                  disabled={!products[0] || products[0]?.stock <= 0}
+                  className="group flex items-center gap-3 rounded-full bg-navy px-8 py-4 text-base font-semibold text-white shadow-lg shadow-navy/20 transition-all duration-300 hover:bg-navy-light hover:shadow-navy/30 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <ShoppingCart size={18} strokeWidth={2} />
-                  {t("addToCart")}
+                  {products[0]?.stock <= 0 ? t("outOfStock") : t("addToCart")}
                 </button>
               </div>
 

@@ -28,6 +28,7 @@ export const products = sqliteTable("products", {
 
 export const clients = sqliteTable("clients", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type", { enum: ["b2c", "b2b"] }).notNull().default("b2c"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email"),
@@ -46,10 +47,11 @@ export const orders = sqliteTable("orders", {
     .notNull()
     .references(() => clients.id),
   status: text("status", {
-    enum: ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"],
+    enum: ["pending", "confirmed", "shipped", "delivered", "cancelled", "returned"],
   })
     .notNull()
     .default("pending"),
+  statusHistory: text("status_history").default("[]"),
   paymentMethod: text("payment_method", { enum: ["cod", "flouci"] }).notNull(),
   paymentStatus: text("payment_status", {
     enum: ["pending", "paid", "failed"],

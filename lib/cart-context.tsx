@@ -48,12 +48,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   const addItem = useCallback((item: Omit<CartItem, "quantity">) => {
+    if (item.stock <= 0) return;
     setItems((prev) => {
       const existing = prev.find((i) => i.productId === item.productId);
       if (existing) {
+        if (existing.quantity >= item.stock) return prev;
         return prev.map((i) =>
           i.productId === item.productId
-            ? { ...i, quantity: Math.min(i.quantity + 1, i.stock) }
+            ? { ...i, quantity: Math.min(i.quantity + 1, item.stock) }
             : i
         );
       }

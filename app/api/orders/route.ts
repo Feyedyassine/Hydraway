@@ -153,13 +153,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // COD - order is confirmed directly
-    await db
-      .update(orders)
-      .set({ status: "confirmed" })
-      .where(eq(orders.id, order.id));
-
-    return NextResponse.json({ orderId: order.id, status: "confirmed" });
+    // COD - order stays pending until admin confirms
+    return NextResponse.json({ orderId: order.id, status: "pending" });
   } catch (error) {
     console.error("Order creation error:", error);
     return NextResponse.json(
