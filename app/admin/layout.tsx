@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Package, ShoppingCart, Users, LogOut, Menu, X, LayoutDashboard } from "lucide-react";
+import { Package, ShoppingCart, Users, LogOut, Menu, X, LayoutDashboard, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { ToastProvider } from "./toast";
 
@@ -57,6 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin", label: "Orders", icon: ShoppingCart },
     { href: "/admin/products", label: "Products", icon: Package },
     { href: "/admin/clients", label: "Clients", icon: Users },
+    { href: "/admin/contact", label: "Messages", icon: MessageSquare },
   ];
 
   // Filter for warehouse: only orders

@@ -152,7 +152,7 @@
       },
       "pour": {
         "title": "Pour",
-        "description": "Pour into 250-500ml of cold water"
+        "description": "Pour into 250-300ml of cold water"
       },
       "mix": {
         "title": "Mix",
@@ -276,12 +276,267 @@
     ]
   },
   "footer": {
-    "description": "The premium hydration solution in Tunisia. Electrolytes, vitamins and essential minerals.",
+    "description": "The premium hydration solution in Tunisia\nEssential electrolytes and vitamins for optimal hydration",
     "navigation": "Navigation",
+    "legalSection": "Legal",
     "legal": "Legal Mentions",
+    "cgv": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "returns": "Return Policy",
     "contact": "Contact",
     "rights": "All rights reserved.",
     "madeIn": "Made in Tunisia 🇹🇳"
+  },
+  "legal": {
+    "title": "Legal Mentions",
+    "identification": {
+      "title": "1. Company Identification",
+      "intro": "The website www.hydraway.com.tn is published by:",
+      "companyName": "EVERVITAL SARL",
+      "companyType": "Limited Liability Company (SARL) with a share capital of 1,000 Tunisian dinars",
+      "address": "Registered office: 9 rue Noureddine El Khayechi, La Marsa Safsaf, 2078 La Marsa, Tunisia",
+      "rne": "RNE: C01254492025",
+      "fiscal": "Tax ID: 1933135L",
+      "representative": "Legal representative: Mr. Zied Belkhiria, Manager",
+      "email": "Email: info@hydraway.com.tn",
+      "phone": "Phone: +216 29 247 453",
+      "brand": "The HYDRAWAY brand is operated by EVERVITAL SARL."
+    },
+    "hosting": {
+      "title": "2. Website Hosting",
+      "intro": "The website is hosted by:",
+      "type": "Professional web hosting provider",
+      "site": "Website: vercel.com",
+      "dev": "Website developed and maintained by grafen.tn",
+      "note": "Technical infrastructure is operated in accordance with international security and service availability standards."
+    },
+    "ip": {
+      "title": "3. Intellectual Property",
+      "p1": "The HYDRAWAY brand, its logo, visual identity, graphic elements, texts, images, videos, illustrations, and all content on the website www.hydraway.com.tn are protected by Tunisian and international intellectual property laws.",
+      "p2": "Any reproduction, representation, modification, publication, transmission, or total or partial exploitation of the website or its content, by any means, without prior written authorization from EVERVITAL SARL, is strictly prohibited and may result in civil and criminal liability."
+    },
+    "liability": {
+      "title": "4. Liability",
+      "p1": "HYDRAWAY is a dietary supplement.",
+      "p2": "Products sold on the website are not medications and are not intended to diagnose, treat, cure, or prevent any disease. Information on the website is provided for informational purposes and does not substitute professional medical advice.",
+      "p3": "EVERVITAL SARL strives to ensure the accuracy and timeliness of information on the website. However, the company cannot be held responsible for omissions, inaccuracies, or delays in updates.",
+      "p4": "The company shall not be held liable for misuse of products, use inconsistent with recommendations, or individual allergic reactions."
+    },
+    "data": {
+      "title": "5. Personal Data Protection",
+      "intro": "EVERVITAL SARL collects and processes personal data as part of its e-commerce activity in accordance with applicable Tunisian data protection legislation.",
+      "usageIntro": "Collected data is used solely for:",
+      "usage1": "Order management",
+      "usage2": "Customer relations",
+      "usage3": "Service improvement",
+      "rights": "Users have the right to access, rectify, delete, and object to the processing of their personal data.",
+      "contact": "Any request can be sent to: info@hydraway.com.tn",
+      "noDpo": "No Data Protection Officer (DPO) has been designated to date.",
+      "noSale": "Data is not sold to third parties."
+    },
+    "cookies": {
+      "title": "6. Cookies",
+      "p1": "The website may use cookies to improve user experience, measure audience, and optimize website performance.",
+      "p2": "Users can configure their browser to refuse or delete cookies.",
+      "p3": "Continued browsing of the website implies acceptance of cookie usage."
+    },
+    "jurisdiction": {
+      "title": "7. Applicable Law and Jurisdiction",
+      "p1": "These legal mentions are governed by Tunisian law.",
+      "p2": "In case of dispute relating to the use of the website or product purchases, exclusive jurisdiction is granted to the courts of Tunis."
+    },
+    "health": {
+      "title": "Health Warning",
+      "item1": "HYDRAWAY is a dietary supplement.",
+      "item2": "It should not be used as a substitute for a varied, balanced diet or a healthy lifestyle.",
+      "item3": "Do not exceed the recommended daily dose.",
+      "item4": "Keep out of reach of children.",
+      "item5": "This product is not intended to diagnose, treat, cure, or prevent any disease.",
+      "item6": "If pregnant, breastfeeding, on medication, or suffering from a chronic condition, consult a healthcare professional before use.",
+      "item7": "In case of adverse reaction, immediately stop use and consult a doctor."
+    },
+    "usage": {
+      "title": "Usage and Precautions",
+      "intro": "HYDRAWAY products are intended for healthy adults in the context of physical activity, heat exposure, or recovery.",
+      "notIntended": "They are not intended for:",
+      "not1": "Children without medical advice",
+      "not2": "People with kidney disorders",
+      "not3": "People on a strict low-sodium diet",
+      "disclaimer": "EVERVITAL SARL disclaims all liability in case of:",
+      "disc1": "Non-compliance with usage recommendations",
+      "disc2": "Combination with incompatible products",
+      "disc3": "Excessive or improper use"
+    },
+    "storage": {
+      "title": "Storage and Conservation",
+      "intro": "Products must be stored:",
+      "item1": "Away from heat",
+      "item2": "In a dry place",
+      "item3": "At room temperature",
+      "item4": "Away from light",
+      "disclaimer": "Any deterioration resulting from improper storage shall not engage the company's liability."
+    }
+  },
+  "cgv": {
+    "title": "Terms & Conditions of Sale",
+    "object": {
+      "title": "Article 1 – Purpose",
+      "p1": "These Terms & Conditions of Sale govern the sale of products marketed by EVERVITAL SARL under the HYDRAWAY brand via the website www.hydraway.com.tn.",
+      "p2": "Any order implies full and unconditional acceptance of these Terms & Conditions."
+    },
+    "products": {
+      "title": "Article 2 – Products",
+      "p1": "The products sold are dietary supplements in water-soluble stick format.",
+      "p2": "HYDRAWAY is a dietary supplement and does not constitute medication.",
+      "p3": "Essential product characteristics are described on the website. Visuals are non-contractual."
+    },
+    "prices": {
+      "title": "Article 3 – Prices",
+      "p1": "Prices are displayed in Tunisian dinars (TND) and include applicable VAT.",
+      "p2": "EVERVITAL SARL reserves the right to modify prices at any time. The applicable price is the one displayed at the time of the order."
+    },
+    "order": {
+      "title": "Article 4 – Order",
+      "intro": "Order validation implies:",
+      "item1": "Acceptance of the Terms & Conditions",
+      "item2": "Accuracy of information provided",
+      "item3": "Payment commitment",
+      "fraud": "The company reserves the right to cancel any order in case of suspected fraud or non-payment."
+    },
+    "payment": {
+      "title": "Article 5 – Payment",
+      "p1": "Payment is made via the secure methods offered on the website.",
+      "p2": "The order is considered validated upon payment confirmation."
+    },
+    "delivery": {
+      "title": "Article 6 – Delivery",
+      "p1": "Deliveries are made within Tunisian territory.",
+      "p2": "Indicated delivery times are estimates. EVERVITAL SARL shall not be held responsible for delays attributable to carriers.",
+      "p3": "The customer must check the condition of the package upon receipt."
+    },
+    "withdrawal": {
+      "title": "Article 7 – Right of Withdrawal",
+      "intro": "In accordance with applicable regulations, the customer has a 7-day period from receipt to exercise the right of withdrawal.",
+      "conditions": "Products must be returned:",
+      "cond1": "Unopened",
+      "cond2": "Unused",
+      "cond3": "In original packaging",
+      "fees": "Return shipping costs are the customer's responsibility."
+    },
+    "responsibility": {
+      "title": "Article 8 – Liability",
+      "intro": "EVERVITAL SARL shall not be held liable for:",
+      "item1": "Misuse of products",
+      "item2": "Use inconsistent with recommendations",
+      "item3": "Individual allergies or reactions",
+      "note": "Products do not replace a balanced diet or medical treatment."
+    },
+    "disputes": {
+      "title": "Article 9 – Disputes",
+      "p1": "These Terms & Conditions are governed by Tunisian law.",
+      "p2": "Any dispute falls under the jurisdiction of the courts of Tunis."
+    },
+    "b2b": {
+      "title": "B2B Relations",
+      "intro": "Any resale of HYDRAWAY products is subject to prior acceptance of specific B2B commercial terms.",
+      "commitIntro": "The distributor commits to:",
+      "commit1": "Respecting storage conditions",
+      "commit2": "Maintaining the brand's premium image",
+      "commit3": "Not modifying the packaging or labeling",
+      "commit4": "Complying with applicable local regulations",
+      "abuse": "Any misuse of the brand may result in immediate termination of the partnership."
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "collected": {
+      "title": "1. Data Collected",
+      "intro": "We collect:",
+      "item1": "First and last name",
+      "item2": "Address",
+      "item3": "Phone number",
+      "item4": "Email",
+      "item5": "Payment information (via secure provider)"
+    },
+    "purpose": {
+      "title": "2. Purpose of Processing",
+      "intro": "Data is used for:",
+      "item1": "Order processing",
+      "item2": "Customer relationship management",
+      "item3": "After-sales service",
+      "item4": "Commercial communication (if consent given)"
+    },
+    "retention": {
+      "title": "3. Data Retention",
+      "content": "Data is retained for the duration necessary to process the order and comply with legal obligations."
+    },
+    "security": {
+      "title": "4. Security",
+      "content": "EVERVITAL SARL implements technical and organizational measures to protect data against unauthorized access."
+    },
+    "rights": {
+      "title": "5. User Rights",
+      "intro": "In accordance with Tunisian data protection legislation, you have the following rights:",
+      "item1": "Right of access",
+      "item2": "Right of rectification",
+      "item3": "Right of deletion",
+      "item4": "Right of objection",
+      "contact": "Any request can be sent to: info@hydraway.com.tn"
+    }
+  },
+  "returns": {
+    "title": "Return & Refund Policy",
+    "conditions": {
+      "title": "Return Conditions",
+      "intro": "Products may be returned within 7 days of receipt provided that:",
+      "item1": "The packaging is intact",
+      "item2": "The product has not been opened",
+      "item3": "The product has not been used",
+      "opened": "Opened products cannot be returned or refunded for hygiene and food safety reasons."
+    },
+    "procedure": {
+      "title": "Procedure",
+      "p1": "Any return request must be sent by email to: info@hydraway.com.tn",
+      "p2": "Once validated, return instructions will be communicated to the customer."
+    },
+    "refund": {
+      "title": "Refund",
+      "p1": "Refunds are processed within 14 days after receipt and verification of returned products.",
+      "p2": "Original shipping costs are non-refundable."
+    }
+  },
+  "contactPage": {
+    "title": "Contact Us",
+    "subtitle": "Contact",
+    "description": "A question, suggestion, or partnership opportunity? Don't hesitate to reach out.",
+    "info": {
+      "title": "Our Details",
+      "description": "Our team will get back to you as soon as possible.",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address"
+    },
+    "form": {
+      "name": "Full Name",
+      "email": "Email",
+      "phone": "Phone (optional)",
+      "subject": "Subject",
+      "selectSubject": "Select a subject",
+      "subjects": {
+        "general": "General inquiry",
+        "order": "Order question",
+        "partnership": "Partnership / Distribution",
+        "other": "Other"
+      },
+      "message": "Message",
+      "send": "Send",
+      "sending": "Sending..."
+    },
+    "success": {
+      "title": "Message Sent!",
+      "message": "Thank you for your message. Our team will get back to you as soon as possible.",
+      "backHome": "Back to Home"
+    }
   },
   "cart": {
     "title": "Your Cart",
@@ -314,7 +569,9 @@
     "emptyCartMessage": "Add some products before checking out.",
     "successTitle": "Order Confirmed!",
     "successMessage": "Your order #{id} has been placed successfully. We will contact you shortly to confirm delivery.",
-    "backHome": "Back to Home"
+    "backHome": "Back to Home",
+    "phoneInvalid": "Invalid Tunisian phone number",
+    "phoneLength": "Phone number must be 8 digits"
   },
   "order": {
     "title": "Order Now",

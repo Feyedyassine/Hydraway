@@ -69,6 +69,21 @@ export const orders = sqliteTable("orders", {
     .$defaultFn(() => new Date().toISOString()),
 });
 
+export const contactMessages = sqliteTable("contact_messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  status: text("status", { enum: ["new", "read", "replied"] })
+    .notNull()
+    .default("new"),
+  createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
 export const orderItems = sqliteTable("order_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   orderId: integer("order_id")

@@ -33,9 +33,36 @@ export default function CheckoutPage() {
     city: "",
     governorate: "",
   });
+  const [phoneError, setPhoneError] = useState("");
+
+  const validatePhone = (phone: string): boolean => {
+    const cleaned = phone.replace(/[\s\-().]/g, "");
+    const match = cleaned.match(/^(?:\+216|00216)?(\d+)$/);
+    if (!match) {
+      setPhoneError(t("phoneInvalid"));
+      return false;
+    }
+    const digits = match[1];
+    if (digits.length !== 8) {
+      setPhoneError(t("phoneLength"));
+      return false;
+    }
+    if (!/^[2-57-9]/.test(digits)) {
+      setPhoneError(t("phoneInvalid"));
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setClient({ ...client, phone: value });
+    if (phoneError) setPhoneError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validatePhone(client.phone)) return;
     setSubmitting(true);
 
     try {
@@ -182,10 +209,16 @@ export default function CheckoutPage() {
                     <input
                       required
                       type="tel"
+                      placeholder="XX XXX XXX"
                       value={client.phone}
-                      onChange={(e) => setClient({ ...client, phone: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-navy"
+                      onChange={(e) => handlePhoneChange(e.target.value)}
+                      className={`w-full rounded-xl border px-4 py-3 text-sm outline-none transition-colors focus:border-navy ${
+                        phoneError ? "border-red-400" : "border-gray-200"
+                      }`}
                     />
+                    {phoneError && (
+                      <p className="mt-1 text-xs text-red-500">{phoneError}</p>
+                    )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-navy/60">

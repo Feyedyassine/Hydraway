@@ -12,11 +12,14 @@ export default function Footer() {
     { href: "#", label: nav("home") },
     { href: "#produit", label: nav("products") },
     { href: "#avantages", label: nav("about") },
-    { href: "#contact", label: nav("contact") },
+    { href: "/contact", label: nav("contact") },
   ];
 
   const legalLinks = [
     { href: "/mentions-legales", label: t("legal") },
+    { href: "/cgv", label: t("cgv") },
+    { href: "/politique-confidentialite", label: t("privacy") },
+    { href: "/politique-retour", label: t("returns") },
     { href: "/#faq", label: nav("faq") },
   ];
 
@@ -77,7 +80,7 @@ export default function Footer() {
           {/* Legal */}
           <div>
             <h4 className="mb-5 text-xs font-bold uppercase tracking-[0.15em] text-white/25">
-              {t("legal")}
+              {t("legalSection")}
             </h4>
             <ul className="flex flex-col gap-3">
               {legalLinks.map((link) => (
@@ -116,9 +119,15 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-16 flex flex-col items-center gap-4 border-t border-white/[0.06] pt-8 sm:flex-row sm:justify-between">
-          <p className="text-xs text-white/25">
-            &copy; {new Date().getFullYear()} HydraWay. {t("rights")}
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-white/25">
+              &copy; {new Date().getFullYear()} HydraWay. {t("rights")}
+            </p>
+            <p className="text-[10px] text-white/15">
+              Powered by{" "}
+              <a href="https://www.grafen.tn/" target="_blank" rel="noopener noreferrer" className="text-white/25 transition-colors hover:text-white">grafen.tn</a>
+            </p>
+          </div>
           <p className="text-xs text-white/25">{t("madeIn")}</p>
         </div>
       </div>
