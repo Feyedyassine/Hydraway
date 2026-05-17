@@ -108,7 +108,7 @@ export default function Hero() {
         </div>
 
         {/* Right — Product visual */}
-        <div className="relative flex items-center justify-center lg:justify-end">
+        <div className="relative flex items-center justify-center">
           {/* Glow behind product */}
           <div className="absolute h-[400px] w-[400px] rounded-full bg-gradient-to-br from-brand-red/15 to-brand-blue/10 blur-[80px] lg:h-[500px] lg:w-[500px]" />
 
@@ -116,14 +116,14 @@ export default function Hero() {
           <div className="animate-spin-slow absolute h-[340px] w-[340px] rounded-full border border-dashed border-white/[0.06] lg:h-[440px] lg:w-[440px]" />
 
           {/* Product image */}
-          <div className="relative z-10 pr-6">
+          <div className="relative z-10">
             <Image
               src="/images/hydraway-15.png"
               alt="HydraWay Red Berries"
               width={716}
               height={999}
               priority
-              className="h-auto w-[280px] drop-shadow-[0_20px_60px_rgba(220,38,38,0.3)] sm:w-[320px] lg:w-[380px]"
+              className="h-auto w-[240px] drop-shadow-[0_20px_60px_rgba(220,38,38,0.3)] sm:w-[280px] lg:w-[320px]"
               style={{ objectFit: "contain" }}
             />
           </div>
@@ -131,8 +131,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
     </section>
   );
 }
