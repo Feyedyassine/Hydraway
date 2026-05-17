@@ -1,8 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import Script from "next/script";
 import { ShoppingBag, Minus, Plus, CreditCard, Truck } from "lucide-react";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (selector: string | HTMLElement, options: Record<string, unknown>) => string;
+      reset: (widgetId?: string) => void;
+    };
+  }
+}
 
 interface Product {
   id: number;
@@ -40,8 +50,30 @@ export default function OrderForm() {
     governorate: "",
     postalCode: "",
   });
+  const [hp, setHp] = useState(""); // honeypot
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileMounted = useRef(false);
+  const turnstileWidgetId = useRef<string | null>(null);
 
   const SHIPPING_FEE = 9.5;
+
+  const renderTurnstile = () => {
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (!siteKey || turnstileMounted.current || !window.turnstile) return;
+    const container = document.getElementById("turnstile-orderform");
+    if (!container) return;
+    turnstileWidgetId.current = window.turnstile.render(container, {
+      sitekey: siteKey,
+      callback: (token: string) => setTurnstileToken(token),
+      "expired-callback": () => setTurnstileToken(null),
+      "error-callback": () => setTurnstileToken(null),
+    });
+    turnstileMounted.current = true;
+  };
+
+  useEffect(() => {
+    if (step === "info" && window.turnstile) renderTurnstile();
+  }, [step]);
 
   useEffect(() => {
     fetch("/api/products")
@@ -77,6 +109,11 @@ export default function OrderForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (hp) return; // honeypot tripped
+    if (!turnstileToken) {
+      alert("Please complete the verification.");
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -88,13 +125,17 @@ export default function OrderForm() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client, items, paymentMethod }),
+        body: JSON.stringify({ client, items, paymentMethod, turnstileToken, hp }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         alert(data.error || "Order failed");
+        if (window.turnstile && turnstileWidgetId.current) {
+          window.turnstile.reset(turnstileWidgetId.current);
+          setTurnstileToken(null);
+        }
         return;
       }
 
@@ -374,6 +415,24 @@ export default function OrderForm() {
                   <p className="pt-1 text-[11px] text-navy/40">{t("shippingNote")}</p>
                 </div>
 
+                {/* Honeypot */}
+                <input
+                  type="text"
+                  name="company"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={hp}
+                  onChange={(e) => setHp(e.target.value)}
+                  aria-hidden="true"
+                  className="absolute h-0 w-0 overflow-hidden border-0 p-0 opacity-0"
+                  style={{ position: "absolute", left: "-9999px" }}
+                />
+
+                {/* Turnstile */}
+                <div className="mt-6 flex justify-center">
+                  <div id="turnstile-orderform" />
+                </div>
+
                 <div className="mt-6 flex gap-3">
                   <button
                     type="button"
@@ -384,7 +443,7 @@ export default function OrderForm() {
                   </button>
                   <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || !turnstileToken}
                     className="flex-1 rounded-full border border-brand-red/60 bg-transparent py-3.5 text-base font-semibold text-navy transition-all hover:bg-brand-red/10 disabled:opacity-50"
                   >
                     {submitting ? t("processing") : t("placeOrder")}
@@ -395,6 +454,11 @@ export default function OrderForm() {
           </div>
         </div>
       </div>
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="afterInteractive"
+        onLoad={renderTurnstile}
+      />
     </section>
   );
 }

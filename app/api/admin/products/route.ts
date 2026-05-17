@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth";
+import { listProducts, updateProduct as sbUpdateProduct, StockBridgeError } from "@/lib/stockbridge";
 import { eq } from "drizzle-orm";
 
 // GET /api/admin/products
@@ -9,7 +10,49 @@ export async function GET() {
   try {
     await requireAuth();
     const all = await db.select().from(products);
-    return NextResponse.json(all);
+
+    const linkedIds = new Set(
+      all.map((p) => p.stockbridgeProductId).filter((id): id is string => !!id)
+    );
+
+    let sbById = new Map<string, Awaited<ReturnType<typeof listProducts>>["data"][number]>();
+    let stockbridgeError: string | null = null;
+
+    if (linkedIds.size > 0) {
+      try {
+        const list = await listProducts({ limit: 100 });
+        for (const p of list.data) {
+          if (linkedIds.has(p.id)) sbById.set(p.id, p);
+        }
+      } catch (err) {
+        stockbridgeError = err instanceof Error ? err.message : "StockBridge unreachable";
+      }
+    }
+
+    const enriched = all.map((p) => {
+      const sb = p.stockbridgeProductId ? sbById.get(p.stockbridgeProductId) ?? null : null;
+      return {
+        ...p,
+        stockbridge: sb
+          ? {
+              id: sb.id,
+              price_ht: sb.price_ht,
+              stock_physical: sb.stock_physical,
+              stock_reserved: sb.stock_reserved,
+              stock_available: sb.stock_physical - sb.stock_reserved,
+              is_low_stock: sb.is_low_stock,
+              alert_threshold: sb.alert_threshold,
+              updated_at: sb.updated_at,
+            }
+          : null,
+      };
+    });
+
+    return NextResponse.json({
+      products: enriched,
+      stockbridgeError,
+      syncedAt: new Date().toISOString(),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error";
     if (message === "Unauthorized" || message === "Forbidden") {
@@ -76,7 +119,26 @@ export async function PUT(req: NextRequest) {
       .where(eq(products.id, body.id))
       .returning();
 
-    return NextResponse.json(updated);
+    // Auto-push price/name/threshold to StockBridge for linked products.
+    let stockbridgeWarning: string | null = null;
+    if (updated.stockbridgeProductId) {
+      try {
+        await sbUpdateProduct(updated.stockbridgeProductId, {
+          name: updated.name,
+          price_ht: updated.price,
+          tax_rate: 0, // Hydraway is VAT-exempt
+        });
+      } catch (err) {
+        stockbridgeWarning =
+          err instanceof StockBridgeError
+            ? `${err.code}: ${err.message}`
+            : err instanceof Error
+              ? err.message
+              : "Failed to push to StockBridge";
+      }
+    }
+
+    return NextResponse.json({ ...updated, stockbridgeWarning });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error";
     if (message === "Unauthorized" || message === "Forbidden") {

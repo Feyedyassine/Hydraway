@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { ChevronDown, Search, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { ChevronDown, Search, ChevronLeft, ChevronRight, Check, AlertTriangle, Truck, Link as LinkIcon } from "lucide-react";
 import { useToast } from "./toast";
 
 function timeAgo(date: string) {
@@ -21,6 +21,8 @@ interface StatusEntry {
   from: string;
   to: string;
   at: string;
+  via?: string;
+  stockbridge_status?: string;
 }
 
 interface Order {
@@ -31,6 +33,13 @@ interface Order {
   total: number;
   createdAt: string;
   statusHistory: string | null;
+  stockbridgeOrderId: string | null;
+  stockbridgeInternalRef: string | null;
+  stockbridgeStatus: string | null;
+  stockbridgeError: string | null;
+  trackingNumber: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
   client: {
     firstName: string;
     lastName: string;
@@ -46,7 +55,6 @@ interface Order {
   }[];
 }
 
-const STATUS_FLOW = ["pending", "confirmed", "shipped", "delivered"];
 const STATUS_OPTIONS = ["pending", "confirmed", "shipped", "delivered", "cancelled", "returned"];
 const PAGE_SIZE = 10;
 
@@ -59,7 +67,22 @@ const TRANSITIONS: Record<string, string[]> = {
   returned: [],
 };
 
-const statusColors: Record<string, string> = {
+const SB_FLOW = ["RECEIVED", "ACCEPTED", "PICKING", "PACKING", "SHIPPED", "DELIVERED"] as const;
+const SB_TERMINAL_BAD = new Set(["CANCELLED", "REJECTED", "RETURNED"]);
+
+const sbStatusColors: Record<string, string> = {
+  RECEIVED: "bg-yellow-100 text-yellow-800",
+  ACCEPTED: "bg-blue-100 text-blue-800",
+  PICKING: "bg-blue-100 text-blue-800",
+  PACKING: "bg-blue-100 text-blue-800",
+  SHIPPED: "bg-indigo-100 text-indigo-800",
+  DELIVERED: "bg-green-100 text-green-800",
+  CANCELLED: "bg-red-100 text-red-800",
+  REJECTED: "bg-red-100 text-red-800",
+  RETURNED: "bg-orange-100 text-orange-800",
+};
+
+const localStatusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
   confirmed: "bg-blue-100 text-blue-800",
   shipped: "bg-indigo-100 text-indigo-800",
@@ -68,18 +91,61 @@ const statusColors: Record<string, string> = {
   returned: "bg-orange-100 text-orange-800",
 };
 
-const paymentStatusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800",
-  failed: "bg-red-100 text-red-800",
-};
+function StockBridgeStepIndicator({ sbStatus }: { sbStatus: string }) {
+  const isBadTerminal = SB_TERMINAL_BAD.has(sbStatus);
+  const currentIdx = SB_FLOW.indexOf(sbStatus as (typeof SB_FLOW)[number]);
+  const isDelivered = sbStatus === "DELIVERED";
 
-function StepIndicator({ status, paymentMethod }: { status: string; paymentMethod: string }) {
+  return (
+    <div className="flex items-center gap-1">
+      {SB_FLOW.map((step, i) => {
+        const isCompleted = isDelivered || currentIdx > i;
+        const isCurrent = !isDelivered && currentIdx === i;
+
+        return (
+          <div key={step} className="flex items-center gap-1">
+            <div
+              title={step}
+              className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-medium transition-colors ${
+                isBadTerminal
+                  ? "bg-gray-100 text-gray-400"
+                  : isCompleted
+                    ? "bg-green-500 text-white"
+                    : isCurrent
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-100 text-gray-400"
+              }`}
+            >
+              {isCompleted ? <Check size={10} /> : i + 1}
+            </div>
+            {i < SB_FLOW.length - 1 && (
+              <div
+                className={`h-0.5 w-3 ${
+                  isBadTerminal ? "bg-gray-200" : isCompleted ? "bg-green-400" : "bg-gray-200"
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+      {isBadTerminal && (
+        <span
+          className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-medium ${sbStatusColors[sbStatus] ?? "bg-gray-100 text-gray-700"}`}
+        >
+          {sbStatus}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function LegacyStepIndicator({ status, paymentMethod }: { status: string; paymentMethod: string }) {
   const isCancelled = status === "cancelled";
   const isReturned = status === "returned";
-  const steps = paymentMethod === "flouci"
-    ? ["confirmed", "shipped", "delivered"]
-    : ["pending", "confirmed", "shipped", "delivered"];
+  const steps =
+    paymentMethod === "flouci"
+      ? ["confirmed", "shipped", "delivered"]
+      : ["pending", "confirmed", "shipped", "delivered"];
   const currentIdx = steps.indexOf(status);
   const isTerminal = status === "delivered";
 
@@ -96,10 +162,10 @@ function StepIndicator({ status, paymentMethod }: { status: string; paymentMetho
                 isCancelled || isReturned
                   ? "bg-gray-100 text-gray-400"
                   : isCompleted
-                  ? "bg-green-500 text-white"
-                  : isCurrent
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-400"
+                    ? "bg-green-500 text-white"
+                    : isCurrent
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-100 text-gray-400"
               }`}
             >
               {isCompleted ? <Check size={12} /> : i + 1}
@@ -107,11 +173,7 @@ function StepIndicator({ status, paymentMethod }: { status: string; paymentMetho
             {i < steps.length - 1 && (
               <div
                 className={`h-0.5 w-4 ${
-                  isCancelled || isReturned
-                    ? "bg-gray-200"
-                    : isCompleted
-                    ? "bg-green-400"
-                    : "bg-gray-200"
+                  isCancelled || isReturned ? "bg-gray-200" : isCompleted ? "bg-green-400" : "bg-gray-200"
                 }`}
               />
             )}
@@ -160,7 +222,9 @@ export default function OrdersPage() {
       const matchesSearch =
         !q ||
         `${o.client.firstName} ${o.client.lastName}`.toLowerCase().includes(q) ||
-        `#${o.id}`.includes(q);
+        `#${o.id}`.includes(q) ||
+        (o.stockbridgeInternalRef?.toLowerCase().includes(q) ?? false) ||
+        (o.trackingNumber?.toLowerCase().includes(q) ?? false);
       const matchesStatus = !statusFilter || o.status === statusFilter;
       const matchesPayment = !paymentFilter || o.paymentMethod === paymentFilter;
       return matchesSearch && matchesStatus && matchesPayment;
@@ -175,7 +239,6 @@ export default function OrdersPage() {
   }, [search, statusFilter, paymentFilter]);
 
   const updateStatus = async (orderId: number, newStatus: string) => {
-    // Confirm destructive actions
     if (newStatus === "cancelled" && !confirm("Are you sure you want to cancel this order?")) return;
     if (newStatus === "returned" && !confirm("Mark this order as returned?")) return;
 
@@ -205,7 +268,9 @@ export default function OrdersPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-        <span className="text-sm text-gray-500">{filtered.length} of {orders.length} orders</span>
+        <span className="text-sm text-gray-500">
+          {filtered.length} of {orders.length} orders
+        </span>
       </div>
 
       {/* Filters */}
@@ -215,7 +280,7 @@ export default function OrdersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by client name or order #..."
+            placeholder="Search by name, order #, SB ref, or tracking..."
             className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-gray-900"
           />
         </div>
@@ -226,7 +291,9 @@ export default function OrdersPage() {
         >
           <option value="">All statuses</option>
           {STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
         <select
@@ -247,31 +314,64 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-3">
           {paginated.map((order) => {
+            const linked = !!order.stockbridgeOrderId;
+            const sbStatus = order.stockbridgeStatus;
+            const hasSbError = !!order.stockbridgeError;
             const allowed = TRANSITIONS[order.status] || [];
             const isTerminal = allowed.length === 0;
             const history: StatusEntry[] = JSON.parse(order.statusHistory || "[]");
 
             return (
-              <div key={order.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
+              <div
+                key={order.id}
+                className={`overflow-hidden rounded-xl bg-white shadow-sm ${hasSbError ? "ring-1 ring-red-200" : ""}`}
+              >
                 {/* Order header row */}
                 <button
                   onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
                   className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-gray-50"
                 >
-                  <span className="w-16 text-sm font-bold text-gray-900">#{order.id}</span>
-                  <span className="flex-1 text-sm text-gray-600">
-                    {order.client.firstName} {order.client.lastName}
-                    <span className="ml-2 text-xs text-gray-400">{timeAgo(order.createdAt)}</span>
-                  </span>
-                  <div className="hidden md:block">
-                    <StepIndicator status={order.status} paymentMethod={order.paymentMethod} />
+                  <span className="w-16 shrink-0 text-sm font-bold text-gray-900">#{order.id}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-gray-600">
+                      {order.client.firstName} {order.client.lastName}
+                      <span className="ml-2 text-xs text-gray-400">{timeAgo(order.createdAt)}</span>
+                    </div>
+                    {order.stockbridgeInternalRef && (
+                      <div className="mt-0.5 truncate text-[11px] text-gray-400">
+                        SB: {order.stockbridgeInternalRef}
+                        {order.trackingNumber && (
+                          <span className="ml-2 inline-flex items-center gap-1 text-indigo-600">
+                            <Truck size={10} />
+                            {order.trackingNumber}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium md:hidden ${statusColors[order.status]}`}>
-                    {order.status}
+                  <div className="hidden md:block">
+                    {linked && sbStatus ? (
+                      <StockBridgeStepIndicator sbStatus={sbStatus} />
+                    ) : (
+                      <LegacyStepIndicator status={order.status} paymentMethod={order.paymentMethod} />
+                    )}
+                  </div>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium md:hidden ${
+                      linked && sbStatus
+                        ? sbStatusColors[sbStatus] ?? "bg-gray-100 text-gray-700"
+                        : localStatusColors[order.status]
+                    }`}
+                  >
+                    {linked && sbStatus ? sbStatus : order.status}
                   </span>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                    order.paymentMethod === "flouci" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-600"
-                  }`}>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                      order.paymentMethod === "flouci"
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
                     {order.paymentMethod === "cod" ? "COD" : "Flouci"}
                   </span>
                   <span className="w-20 text-right text-sm font-semibold text-gray-900">
@@ -279,13 +379,28 @@ export default function OrdersPage() {
                   </span>
                   <ChevronDown
                     size={16}
-                    className={`text-gray-400 transition-transform ${expandedId === order.id ? "rotate-180" : ""}`}
+                    className={`text-gray-400 transition-transform ${
+                      expandedId === order.id ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
                 {/* Expanded details */}
                 {expandedId === order.id && (
                   <div className="border-t border-gray-100 px-5 py-4">
+                    {hasSbError && (
+                      <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                        <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-600" />
+                        <div>
+                          <p className="font-medium">StockBridge submission failed</p>
+                          <p className="text-xs text-red-700">{order.stockbridgeError}</p>
+                          <p className="mt-1 text-xs text-red-600">
+                            This order is in our DB but was never accepted by StockBridge. Investigate or recreate manually on their side.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                       {/* Client info */}
                       <div>
@@ -310,13 +425,44 @@ export default function OrdersPage() {
                         ))}
                       </div>
 
-                      {/* Status update */}
+                      {/* Status / actions */}
                       <div>
-                        <h3 className="mb-2 text-xs font-semibold uppercase text-gray-400">
-                          Update Status
-                        </h3>
-                        {isTerminal ? (
-                          <p className="text-sm text-gray-400 italic">
+                        <h3 className="mb-2 text-xs font-semibold uppercase text-gray-400">Status</h3>
+
+                        {linked ? (
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500">StockBridge:</span>
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                  sbStatusColors[sbStatus ?? ""] ?? "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                {sbStatus ?? "—"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-400">
+                              Lifecycle is owned by StockBridge — they call the customer, confirm, ship and update status. Manual transitions disabled.
+                            </p>
+                            {order.trackingNumber && (
+                              <p className="text-sm text-gray-700">
+                                <Truck size={12} className="mr-1 inline" />
+                                Tracking: <span className="font-mono">{order.trackingNumber}</span>
+                              </p>
+                            )}
+                            {order.shippedAt && (
+                              <p className="text-xs text-gray-400">
+                                Shipped: {new Date(order.shippedAt).toLocaleString()}
+                              </p>
+                            )}
+                            {order.deliveredAt && (
+                              <p className="text-xs text-gray-400">
+                                Delivered: {new Date(order.deliveredAt).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        ) : isTerminal ? (
+                          <p className="text-sm italic text-gray-400">
                             Order is {order.status} — no further changes
                           </p>
                         ) : (
@@ -333,7 +479,15 @@ export default function OrdersPage() {
                                       : "bg-gray-900 text-white hover:bg-gray-800"
                                   }`}
                                 >
-                                  {s === "confirmed" ? "Confirm" : s === "shipped" ? "Mark Shipped" : s === "delivered" ? "Mark Delivered" : s === "cancelled" ? "Cancel" : "Mark Returned"}
+                                  {s === "confirmed"
+                                    ? "Confirm"
+                                    : s === "shipped"
+                                      ? "Mark Shipped"
+                                      : s === "delivered"
+                                        ? "Mark Delivered"
+                                        : s === "cancelled"
+                                          ? "Cancel"
+                                          : "Mark Returned"}
                                 </button>
                               );
                             })}
@@ -343,14 +497,24 @@ export default function OrdersPage() {
                         {/* Timeline */}
                         <div className="mt-3 space-y-1">
                           <p className="text-xs text-gray-400">
-                            Created: {new Date(order.createdAt).toLocaleDateString()}
+                            Created: {new Date(order.createdAt).toLocaleString()}
                           </p>
                           {history.map((h, i) => (
                             <p key={i} className="text-xs text-gray-400">
                               {h.from} → {h.to}: {new Date(h.at).toLocaleString()}
+                              {h.via === "stockbridge" && (
+                                <span className="ml-1 text-indigo-500">(via SB{h.stockbridge_status ? `: ${h.stockbridge_status}` : ""})</span>
+                              )}
                             </p>
                           ))}
                         </div>
+
+                        {linked && (
+                          <div className="mt-3 flex items-center gap-1 text-[11px] text-gray-400">
+                            <LinkIcon size={10} />
+                            SB ref: <span className="font-mono">{order.stockbridgeInternalRef}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

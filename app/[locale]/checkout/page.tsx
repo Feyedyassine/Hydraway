@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useCart } from "@/lib/cart-context";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import Script from "next/script";
 import { CreditCard, Banknote, ArrowLeft, ShoppingBag, ChevronDown } from "lucide-react";
 import Navbar from "../components/Navbar";
 import CartDrawer from "../components/CartDrawer";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (selector: string | HTMLElement, options: Record<string, unknown>) => string;
+      reset: (widgetId?: string) => void;
+    };
+  }
+}
 
 const GOVERNORATES = [
   "Ariana", "Béja", "Ben Arous", "Bizerte", "Gabès", "Gafsa", "Jendouba",
@@ -35,9 +45,31 @@ export default function CheckoutPage() {
     postalCode: "",
   });
   const [phoneError, setPhoneError] = useState("");
+  const [hp, setHp] = useState(""); // honeypot
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileMounted = useRef(false);
+  const turnstileWidgetId = useRef<string | null>(null);
 
   const SHIPPING_FEE = 9.5;
   const grandTotal = total + SHIPPING_FEE;
+
+  const renderTurnstile = () => {
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (!siteKey || turnstileMounted.current || !window.turnstile) return;
+    const container = document.getElementById("turnstile-checkout");
+    if (!container) return;
+    turnstileWidgetId.current = window.turnstile.render(container, {
+      sitekey: siteKey,
+      callback: (token: string) => setTurnstileToken(token),
+      "expired-callback": () => setTurnstileToken(null),
+      "error-callback": () => setTurnstileToken(null),
+    });
+    turnstileMounted.current = true;
+  };
+
+  useEffect(() => {
+    if (window.turnstile) renderTurnstile();
+  }, []);
 
   const validatePhone = (phone: string): boolean => {
     const cleaned = phone.replace(/[\s\-().]/g, "");
@@ -67,6 +99,11 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validatePhone(client.phone)) return;
+    if (hp) return; // honeypot tripped — silent reject
+    if (!turnstileToken) {
+      alert("Please complete the verification.");
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -78,13 +115,24 @@ export default function CheckoutPage() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client, items: orderItems, paymentMethod }),
+        body: JSON.stringify({
+          client,
+          items: orderItems,
+          paymentMethod,
+          turnstileToken,
+          hp,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         alert(data.error || "Order failed");
+        // Reset Turnstile so user can retry
+        if (window.turnstile && turnstileWidgetId.current) {
+          window.turnstile.reset(turnstileWidgetId.current);
+          setTurnstileToken(null);
+        }
         return;
       }
 
@@ -327,15 +375,38 @@ export default function CheckoutPage() {
                   </button>
                 </div>
 
+                {/* Honeypot — humans leave empty, bots fill it. Visually hidden, off-screen, autocomplete off. */}
+                <input
+                  type="text"
+                  name="company"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={hp}
+                  onChange={(e) => setHp(e.target.value)}
+                  aria-hidden="true"
+                  className="absolute h-0 w-0 overflow-hidden border-0 p-0 opacity-0"
+                  style={{ position: "absolute", left: "-9999px" }}
+                />
+
+                {/* Turnstile widget */}
+                <div className="mt-8 flex justify-center">
+                  <div id="turnstile-checkout" />
+                </div>
+
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="mt-8 w-full rounded-full bg-navy py-4 text-base font-semibold text-white transition-colors hover:bg-navy-light disabled:opacity-50"
+                  disabled={submitting || !turnstileToken}
+                  className="mt-6 w-full rounded-full bg-navy py-4 text-base font-semibold text-white transition-colors hover:bg-navy-light disabled:opacity-50"
                 >
                   {submitting ? t("processing") : t("placeOrder")}
                 </button>
               </div>
             </form>
+            <Script
+              src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+              strategy="afterInteractive"
+              onLoad={renderTurnstile}
+            />
 
             {/* Right — Order summary */}
             <div className="lg:col-span-2">

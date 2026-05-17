@@ -276,6 +276,20 @@ export async function createProduct(
   return normalizeProduct(data);
 }
 
+export async function updateProduct(
+  id: string,
+  patch: Partial<StockBridgeCreateProductInput>
+): Promise<StockBridgeProduct> {
+  const { data } = await request<{ data: Record<string, unknown> }>(
+    `/api/v1/products/${id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }
+  );
+  return normalizeProduct(data);
+}
+
 export async function getProduct(id: string): Promise<StockBridgeProduct> {
   const { data } = await request<{ data: Record<string, unknown> }>(
     `/api/v1/products/${id}`

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Package, ShoppingCart, Users, LogOut, Menu, X, LayoutDashboard, MessageSquare } from "lucide-react";
+import { Package, ShoppingCart, Users, LogOut, Menu, X, LayoutDashboard, MessageSquare, UserCog, User } from "lucide-react";
 import Image from "next/image";
 import { ToastProvider } from "./toast";
 
@@ -53,16 +53,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user) return null;
 
   const navItems = [
-    { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin", label: "Orders", icon: ShoppingCart },
-    { href: "/admin/products", label: "Products", icon: Package },
-    { href: "/admin/clients", label: "Clients", icon: Users },
-    { href: "/admin/contact", label: "Messages", icon: MessageSquare },
+    { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, warehouse: false },
+    { href: "/admin", label: "Orders", icon: ShoppingCart, warehouse: true },
+    { href: "/admin/products", label: "Products", icon: Package, warehouse: false },
+    { href: "/admin/clients", label: "Clients", icon: Users, warehouse: false },
+    { href: "/admin/contact", label: "Messages", icon: MessageSquare, warehouse: false },
+    { href: "/admin/users", label: "Team", icon: UserCog, warehouse: false },
+    { href: "/admin/profile", label: "My Profile", icon: User, warehouse: true },
   ];
 
-  // Filter for warehouse: only orders
+  // Filter for warehouse: only orders + own profile
   const visibleNav = user.role === "warehouse"
-    ? navItems.filter((item) => item.href === "/admin")
+    ? navItems.filter((item) => item.warehouse)
     : navItems;
 
   return (

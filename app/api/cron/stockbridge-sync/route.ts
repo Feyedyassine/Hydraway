@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { orders } from "@/lib/db/schema";
-import { getOrder, mapStockBridgeStatus } from "@/lib/stockbridge";
+import { orders, products } from "@/lib/db/schema";
+import { getOrder, listProducts, mapStockBridgeStatus } from "@/lib/stockbridge";
 import { and, eq, isNotNull, ne } from "drizzle-orm";
 
 const TERMINAL = new Set(["delivered", "cancelled", "returned"]);
@@ -13,6 +13,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const orderResults = await syncOrders();
+  const productResults = await syncProductStock();
+
+  return NextResponse.json({
+    orders: orderResults,
+    products: productResults,
+  });
+}
+
+async function syncOrders() {
   const candidates = await db
     .select()
     .from(orders)
@@ -78,5 +88,45 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ checked: results.length, results });
+  return { checked: results.length, results };
+}
+
+async function syncProductStock() {
+  const linked = await db
+    .select()
+    .from(products)
+    .where(isNotNull(products.stockbridgeProductId));
+
+  if (linked.length === 0) {
+    return { checked: 0, results: [] };
+  }
+
+  try {
+    const list = await listProducts({ limit: 100 });
+    const byId = new Map(list.data.map((p) => [p.id, p]));
+
+    const results: Array<{ productId: number; available: number; changed: boolean }> = [];
+
+    for (const local of linked) {
+      if (!local.stockbridgeProductId) continue;
+      const sb = byId.get(local.stockbridgeProductId);
+      if (!sb) continue;
+
+      const available = sb.stock_physical - sb.stock_reserved;
+      if (local.stock !== available) {
+        await db
+          .update(products)
+          .set({ stock: available })
+          .where(eq(products.id, local.id));
+        results.push({ productId: local.id, available, changed: true });
+      } else {
+        results.push({ productId: local.id, available, changed: false });
+      }
+    }
+
+    return { checked: results.length, results };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return { checked: 0, results: [], error: msg };
+  }
 }

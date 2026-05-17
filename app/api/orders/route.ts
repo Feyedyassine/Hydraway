@@ -11,10 +11,37 @@ import { eq } from "drizzle-orm";
 
 const SHIPPING_FEE_TND = 9.5; // 8.5 livraison + 1 timbre fiscal (StockBridge COD)
 
+const MAX_QTY_PER_LINE = 20;
+const MAX_TOTAL_ITEMS = 50;
+const MAX_ORDER_TOTAL_TND = 5000;
+const TUNISIAN_PHONE_REGEX = /^(?:\+216|00216)?(2[0-9]|3[0-9]|4[0-9]|5[0-57-9]|7[0-9]|9[0-9])\d{6}$/;
+
+async function verifyTurnstile(token: string, ip: string | null): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) {
+    console.warn("TURNSTILE_SECRET_KEY not set — skipping verification (dev only)");
+    return true;
+  }
+  try {
+    const params = new URLSearchParams();
+    params.set("secret", secret);
+    params.set("response", token);
+    if (ip) params.set("remoteip", ip);
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: params,
+    });
+    const data = (await res.json()) as { success?: boolean };
+    return data.success === true;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { client, items, paymentMethod, notes } = body as {
+    const { client, items, paymentMethod, notes, turnstileToken, hp } = body as {
       client: {
         firstName: string;
         lastName: string;
@@ -28,7 +55,27 @@ export async function POST(req: NextRequest) {
       items: { productId: number; quantity: number }[];
       paymentMethod: "cod" | "flouci";
       notes?: string;
+      turnstileToken?: string;
+      hp?: string;
     };
+
+    // Honeypot: real users leave this empty.
+    if (hp && hp.length > 0) {
+      return NextResponse.json({ error: "Invalid submission" }, { status: 400 });
+    }
+
+    // Turnstile verification
+    if (!turnstileToken) {
+      return NextResponse.json({ error: "Verification required" }, { status: 400 });
+    }
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("x-real-ip") ||
+      null;
+    const turnstileOk = await verifyTurnstile(turnstileToken, ip);
+    if (!turnstileOk) {
+      return NextResponse.json({ error: "Verification failed" }, { status: 400 });
+    }
 
     if (
       !client?.firstName ||
@@ -44,9 +91,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Field-length sanity checks
+    if (
+      client.firstName.trim().length < 2 ||
+      client.lastName.trim().length < 2 ||
+      client.address.trim().length < 5 ||
+      client.city.trim().length < 2
+    ) {
+      return NextResponse.json({ error: "Invalid client fields" }, { status: 400 });
+    }
+
+    // Phone format — Tunisian mobile
+    const cleanedPhone = client.phone.replace(/[\s\-().]/g, "");
+    if (!TUNISIAN_PHONE_REGEX.test(cleanedPhone)) {
+      return NextResponse.json({ error: "Invalid Tunisian phone number" }, { status: 400 });
+    }
+
     if (!items?.length) {
       return NextResponse.json(
         { error: "Order must have at least one item" },
+        { status: 400 }
+      );
+    }
+
+    // Quantity caps
+    const totalUnits = items.reduce((n, i) => n + (i.quantity || 0), 0);
+    if (totalUnits > MAX_TOTAL_ITEMS) {
+      return NextResponse.json(
+        { error: `Order exceeds the maximum of ${MAX_TOTAL_ITEMS} items` },
+        { status: 400 }
+      );
+    }
+    if (items.some((i) => i.quantity > MAX_QTY_PER_LINE || i.quantity < 1)) {
+      return NextResponse.json(
+        { error: `Quantity per item must be between 1 and ${MAX_QTY_PER_LINE}` },
         { status: 400 }
       );
     }
@@ -100,6 +178,13 @@ export async function POST(req: NextRequest) {
     // For Flouci: shipping is collected at delivery as well, so the online
     // payment only covers the products.
     const total = paymentMethod === "cod" ? productsTotal + SHIPPING_FEE_TND : productsTotal;
+
+    if (total > MAX_ORDER_TOTAL_TND) {
+      return NextResponse.json(
+        { error: `Order total exceeds ${MAX_ORDER_TOTAL_TND} TND — please contact us for large orders` },
+        { status: 400 }
+      );
+    }
 
     const [newClient] = await db
       .insert(clients)
