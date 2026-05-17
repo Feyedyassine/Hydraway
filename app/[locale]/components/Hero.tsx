@@ -120,10 +120,10 @@ export default function Hero() {
             <Image
               src="/images/hydraway-15.png"
               alt="HydraWay Red Berries"
-              width={520}
-              height={520}
+              width={716}
+              height={999}
               priority
-              className="h-auto w-[340px] drop-shadow-[0_20px_60px_rgba(220,38,38,0.3)] sm:w-[400px] lg:w-[500px]"
+              className="h-auto w-[280px] drop-shadow-[0_20px_60px_rgba(220,38,38,0.3)] sm:w-[320px] lg:w-[380px]"
               style={{ objectFit: "contain" }}
             />
           </div>
