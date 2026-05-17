@@ -152,7 +152,7 @@
       },
       "pour": {
         "title": "Verser",
-        "description": "Versez dans 250-300ml d'eau froide"
+        "description": "Versez dans 500-750ml d'eau froide"
       },
       "mix": {
         "title": "Mélanger",
@@ -299,7 +299,7 @@
       "fiscal": "Matricule fiscal : 1933135L",
       "representative": "Représentant légal : Monsieur Zied Belkhiria, Gérant",
       "email": "Email : info@hydraway.com.tn",
-      "phone": "Téléphone : +216 29 247 453",
+      "phone": "Téléphone : +216 52 888 739",
       "brand": "La marque HYDRAWAY est une marque exploitée par EVERVITAL SARL."
     },
     "hosting": {
@@ -555,13 +555,18 @@
     "city": "Ville",
     "governorate": "Gouvernorat",
     "selectGovernorate": "Sélectionner un gouvernorat",
+    "postalCode": "Code postal",
     "paymentMethod": "Mode de paiement",
     "cod": "Paiement à la livraison",
     "codDesc": "Payez à la réception",
     "flouci": "Payer en ligne",
     "flouciDesc": "Paiement sécurisé via Flouci",
+    "comingSoon": "Bientôt",
     "summary": "Récapitulatif",
-    "total": "Total",
+    "subtotal": "Sous-total produits",
+    "shipping": "Livraison & timbre fiscal",
+    "shippingNote": "Inclut 8,5 TND de livraison et 1 TND de timbre fiscal, à régler à la livraison.",
+    "total": "Total à payer",
     "placeOrder": "Confirmer la commande",
     "processing": "Traitement...",
     "continueShopping": "Continuer vos achats",
@@ -589,9 +594,14 @@
     "city": "Ville",
     "governorate": "Gouvernorat",
     "selectGovernorate": "Sélectionner un gouvernorat",
+    "postalCode": "Code postal",
+    "subtotal": "Sous-total produits",
+    "shipping": "Livraison & timbre fiscal",
+    "shippingNote": "Inclut 8,5 TND de livraison et 1 TND de timbre fiscal, à régler à la livraison.",
     "paymentMethod": "Mode de paiement",
     "cod": "Paiement à la livraison",
     "flouci": "Payer en ligne (Flouci)",
+    "comingSoon": "Bientôt",
     "placeOrder": "Confirmer la commande",
     "processing": "Traitement...",
     "successTitle": "Commande confirmée !",

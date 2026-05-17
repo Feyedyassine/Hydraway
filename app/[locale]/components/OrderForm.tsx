@@ -38,7 +38,10 @@ export default function OrderForm() {
     address: "",
     city: "",
     governorate: "",
+    postalCode: "",
   });
+
+  const SHIPPING_FEE = 9.5;
 
   useEffect(() => {
     fetch("/api/products")
@@ -297,6 +300,26 @@ export default function OrderForm() {
                       ))}
                     </select>
                   </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-navy/70">
+                      {t("postalCode")} *
+                    </label>
+                    <input
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]{4}"
+                      maxLength={4}
+                      placeholder="1002"
+                      value={client.postalCode}
+                      onChange={(e) =>
+                        setClient({
+                          ...client,
+                          postalCode: e.target.value.replace(/\D/g, "").slice(0, 4),
+                        })
+                      }
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-navy"
+                    />
+                  </div>
                 </div>
 
                 {/* Payment method */}
@@ -319,25 +342,36 @@ export default function OrderForm() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPaymentMethod("flouci")}
-                      className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3.5 text-left text-sm font-medium transition-all ${
-                        paymentMethod === "flouci"
-                          ? "border-navy bg-navy/5 text-navy"
-                          : "border-gray-200 text-gray-500 hover:border-gray-300"
-                      }`}
+                      disabled
+                      aria-disabled="true"
+                      className="relative flex cursor-not-allowed items-center gap-3 rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3.5 text-left text-sm font-medium text-gray-400"
                     >
                       <CreditCard size={20} />
                       {t("flouci")}
+                      <span className="absolute -top-2 right-2 rounded-full bg-navy/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+                        {t("comingSoon")}
+                      </span>
                     </button>
                   </div>
                 </div>
 
                 {/* Summary */}
-                <div className="mt-6 rounded-xl bg-ice-light px-5 py-4">
+                <div className="mt-6 space-y-1.5 rounded-xl bg-ice-light px-5 py-4">
                   <div className="flex justify-between text-sm text-navy/60">
-                    <span>{t("total")}</span>
-                    <span className="font-bold text-navy">{total.toFixed(2)} TND</span>
+                    <span>{t("subtotal")}</span>
+                    <span className="font-semibold text-navy">{total.toFixed(2)} TND</span>
                   </div>
+                  <div className="flex justify-between text-sm text-navy/60">
+                    <span>{t("shipping")}</span>
+                    <span className="font-semibold text-navy">{SHIPPING_FEE.toFixed(2)} TND</span>
+                  </div>
+                  <div className="mt-2 flex justify-between border-t border-navy/10 pt-2 text-sm">
+                    <span className="font-semibold text-navy">{t("total")}</span>
+                    <span className="font-bold text-navy">
+                      {(total + SHIPPING_FEE).toFixed(2)} TND
+                    </span>
+                  </div>
+                  <p className="pt-1 text-[11px] text-navy/40">{t("shippingNote")}</p>
                 </div>
 
                 <div className="mt-6 flex gap-3">

@@ -140,10 +140,10 @@ export default function ContactPage() {
                       <div>
                         <p className="text-sm font-semibold text-navy">{t("info.phone")}</p>
                         <a
-                          href="tel:+21629247453"
+                          href="tel:+21652888739"
                           className="text-sm text-navy/50 transition-colors hover:text-brand-red"
                         >
-                          +216 29 247 453
+                          +216 52 888 739
                         </a>
                       </div>
                     </div>

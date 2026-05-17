@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
-import { Plus, Pencil, Trash2, X, Search, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Search, ChevronLeft, ChevronRight, Upload, Link2, CheckCircle2 } from "lucide-react";
 import { useToast } from "../toast";
 
 interface Product {
@@ -11,6 +11,8 @@ interface Product {
   description: string | null;
   descriptionFr: string | null;
   price: number;
+  sku: string | null;
+  stockbridgeProductId: string | null;
   stock: number;
   image: string | null;
   active: boolean;
@@ -22,6 +24,7 @@ const emptyForm = {
   description: "",
   descriptionFr: "",
   price: 0,
+  sku: "",
   stock: 0,
   image: "",
   active: true,
@@ -91,12 +94,46 @@ export default function ProductsPage() {
       description: p.description || "",
       descriptionFr: p.descriptionFr || "",
       price: p.price,
+      sku: p.sku || "",
       stock: p.stock,
       image: p.image || "",
       active: p.active,
     });
     setEditingId(p.id);
     setShowForm(true);
+  };
+
+  const handleLinkStockBridge = async (p: Product) => {
+    let sku = p.sku;
+    if (!sku) {
+      const entered = prompt(
+        `Enter the StockBridge SKU for "${p.name}".\nIt will be matched against StockBridge; if no match is found, a new product will be created there.`
+      );
+      if (!entered) return;
+      sku = entered.trim();
+      if (!sku) return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/stockbridge/sync-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: p.id, sku }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(
+          data.matched
+            ? `Linked to existing StockBridge SKU ${sku}`
+            : `Created on StockBridge as ${sku}`
+        );
+        fetchProducts();
+      } else {
+        toast.error(data.message || data.error || "Link failed");
+      }
+    } catch {
+      toast.error("Link failed");
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,6 +258,7 @@ export default function ProductsPage() {
               <th className="px-5 py-3">Price</th>
               <th className="px-5 py-3">Stock</th>
               <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">StockBridge</th>
               <th className="px-5 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -246,6 +284,25 @@ export default function ProductsPage() {
                     {p.active ? "Active" : "Inactive"}
                   </span>
                 </td>
+                <td className="px-5 py-3">
+                  {p.stockbridgeProductId ? (
+                    <span
+                      className="inline-flex items-center gap-1.5 text-xs text-green-700"
+                      title={`SKU ${p.sku} → ${p.stockbridgeProductId}`}
+                    >
+                      <CheckCircle2 size={14} />
+                      {p.sku}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleLinkStockBridge(p)}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+                    >
+                      <Link2 size={12} />
+                      Link
+                    </button>
+                  )}
+                </td>
                 <td className="px-5 py-3 text-right">
                   <button onClick={() => openEdit(p)} className="mr-2 text-gray-400 hover:text-gray-700">
                     <Pencil size={16} />
@@ -258,7 +315,7 @@ export default function ProductsPage() {
             ))}
             {paginated.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-gray-400">
+                <td colSpan={6} className="py-12 text-center text-gray-400">
                   {products.length === 0 ? "No products yet" : "No products match your filters"}
                 </td>
               </tr>
@@ -361,35 +418,44 @@ export default function ProductsPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">Image</label>
-                  <div className="flex gap-2">
-                    <input
-                      value={form.image}
-                      onChange={(e) => setForm({ ...form, image: e.target.value })}
-                      placeholder="/images/..."
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      className="shrink-0 rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
-                      title="Upload image"
-                    >
-                      <Upload size={16} />
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </div>
-                  {uploading && (
-                    <p className="mt-1 text-xs text-gray-400">Uploading...</p>
-                  )}
+                  <label className="mb-1 block text-xs font-medium text-gray-500">SKU</label>
+                  <input
+                    value={form.sku}
+                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                    placeholder="HYDRAWAY-..."
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  />
                 </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-500">Image</label>
+                <div className="flex gap-2">
+                  <input
+                    value={form.image}
+                    onChange={(e) => setForm({ ...form, image: e.target.value })}
+                    placeholder="/images/..."
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="shrink-0 rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                    title="Upload image"
+                  >
+                    <Upload size={16} />
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </div>
+                {uploading && (
+                  <p className="mt-1 text-xs text-gray-400">Uploading...</p>
+                )}
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input

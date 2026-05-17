@@ -118,12 +118,12 @@ export default function Hero() {
           {/* Product image */}
           <div className="relative z-10 pr-6">
             <Image
-              src="/images/hydraway_pack.png"
+              src="/images/hydraway-15.png"
               alt="HydraWay Red Berries"
-              width={480}
-              height={480}
+              width={520}
+              height={520}
               priority
-              className="h-auto w-[320px] drop-shadow-[0_20px_60px_rgba(220,38,38,0.3)] sm:w-[380px] lg:w-[460px]"
+              className="h-auto w-[340px] drop-shadow-[0_20px_60px_rgba(220,38,38,0.3)] sm:w-[400px] lg:w-[500px]"
               style={{ objectFit: "contain" }}
             />
           </div>

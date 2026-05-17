@@ -152,7 +152,7 @@
       },
       "pour": {
         "title": "Pour",
-        "description": "Pour into 250-300ml of cold water"
+        "description": "Pour into 500-750ml of cold water"
       },
       "mix": {
         "title": "Mix",
@@ -299,7 +299,7 @@
       "fiscal": "Tax ID: 1933135L",
       "representative": "Legal representative: Mr. Zied Belkhiria, Manager",
       "email": "Email: info@hydraway.com.tn",
-      "phone": "Phone: +216 29 247 453",
+      "phone": "Phone: +216 52 888 739",
       "brand": "The HYDRAWAY brand is operated by EVERVITAL SARL."
     },
     "hosting": {
@@ -555,13 +555,18 @@
     "city": "City",
     "governorate": "Governorate",
     "selectGovernorate": "Select a governorate",
+    "postalCode": "Postal Code",
     "paymentMethod": "Payment Method",
     "cod": "Cash on Delivery",
     "codDesc": "Pay when you receive",
     "flouci": "Pay Online",
     "flouciDesc": "Secure payment via Flouci",
+    "comingSoon": "Soon",
     "summary": "Order Summary",
-    "total": "Total",
+    "subtotal": "Products subtotal",
+    "shipping": "Delivery & fiscal stamp",
+    "shippingNote": "Includes 8.5 TND delivery and 1 TND fiscal stamp, paid on delivery.",
+    "total": "Total to pay",
     "placeOrder": "Place Order",
     "processing": "Processing...",
     "continueShopping": "Continue Shopping",
@@ -589,9 +594,14 @@
     "city": "City",
     "governorate": "Governorate",
     "selectGovernorate": "Select a governorate",
+    "postalCode": "Postal Code",
+    "subtotal": "Products subtotal",
+    "shipping": "Delivery & fiscal stamp",
+    "shippingNote": "Includes 8.5 TND delivery and 1 TND fiscal stamp, paid on delivery.",
     "paymentMethod": "Payment Method",
     "cod": "Cash on Delivery",
     "flouci": "Pay Online (Flouci)",
+    "comingSoon": "Soon",
     "placeOrder": "Place Order",
     "processing": "Processing...",
     "successTitle": "Order Confirmed!",

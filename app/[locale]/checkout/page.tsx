@@ -32,8 +32,12 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     governorate: "",
+    postalCode: "",
   });
   const [phoneError, setPhoneError] = useState("");
+
+  const SHIPPING_FEE = 9.5;
+  const grandTotal = total + SHIPPING_FEE;
 
   const validatePhone = (phone: string): boolean => {
     const cleaned = phone.replace(/[\s\-().]/g, "");
@@ -272,6 +276,26 @@ export default function CheckoutPage() {
                       <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-navy/30" />
                     </div>
                   </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-navy/60">
+                      {t("postalCode")} *
+                    </label>
+                    <input
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]{4}"
+                      maxLength={4}
+                      placeholder="1002"
+                      value={client.postalCode}
+                      onChange={(e) =>
+                        setClient({
+                          ...client,
+                          postalCode: e.target.value.replace(/\D/g, "").slice(0, 4),
+                        })
+                      }
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-navy"
+                    />
+                  </div>
                 </div>
 
                 {/* Payment method */}
@@ -291,15 +315,15 @@ export default function CheckoutPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod("flouci")}
-                    className={`flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-4 text-sm font-semibold transition-all ${
-                      paymentMethod === "flouci"
-                        ? "border-navy bg-navy/5 text-navy"
-                        : "border-gray-200 text-gray-400 hover:border-gray-300"
-                    }`}
+                    disabled
+                    aria-disabled="true"
+                    className="relative flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-4 text-sm font-semibold text-gray-400"
                   >
                     <CreditCard size={20} />
                     {t("flouci")}
+                    <span className="absolute -top-2 right-2 rounded-full bg-navy/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+                      {t("comingSoon")}
+                    </span>
                   </button>
                 </div>
 
@@ -347,9 +371,23 @@ export default function CheckoutPage() {
 
                 <div className="my-5 h-px bg-gray-100" />
 
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-navy/60">{t("subtotal")}</span>
+                    <span className="font-semibold text-navy">{total.toFixed(2)} TND</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-navy/60">{t("shipping")}</span>
+                    <span className="font-semibold text-navy">{SHIPPING_FEE.toFixed(2)} TND</span>
+                  </div>
+                  <p className="text-xs text-navy/40">{t("shippingNote")}</p>
+                </div>
+
+                <div className="my-5 h-px bg-gray-100" />
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-navy/60">{t("total")}</span>
-                  <span className="text-2xl font-bold text-navy">{total.toFixed(2)} TND</span>
+                  <span className="text-2xl font-bold text-navy">{grandTotal.toFixed(2)} TND</span>
                 </div>
               </div>
             </div>

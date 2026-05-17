@@ -18,6 +18,8 @@ export const products = sqliteTable("products", {
   description: text("description"),
   descriptionFr: text("description_fr"),
   price: real("price").notNull(),
+  sku: text("sku").unique(),
+  stockbridgeProductId: text("stockbridge_product_id").unique(),
   stock: integer("stock").notNull().default(0),
   image: text("image"),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
@@ -36,6 +38,7 @@ export const clients = sqliteTable("clients", {
   address: text("address").notNull(),
   city: text("city").notNull(),
   governorate: text("governorate").notNull(),
+  postalCode: text("postal_code"),
   createdAt: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
@@ -59,7 +62,15 @@ export const orders = sqliteTable("orders", {
     .notNull()
     .default("pending"),
   flouciPaymentId: text("flouci_payment_id"),
+  stockbridgeOrderId: text("stockbridge_order_id").unique(),
+  stockbridgeInternalRef: text("stockbridge_internal_ref"),
+  stockbridgeStatus: text("stockbridge_status"),
+  stockbridgeError: text("stockbridge_error"),
+  trackingNumber: text("tracking_number"),
+  shippedAt: text("shipped_at"),
+  deliveredAt: text("delivered_at"),
   total: real("total").notNull(),
+  shippingFee: real("shipping_fee").notNull().default(9.5),
   notes: text("notes"),
   createdAt: text("created_at")
     .notNull()

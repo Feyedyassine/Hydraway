@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Instagram, Facebook, Mail, MapPin } from "lucide-react";
+import { Instagram, Facebook, Mail, MapPin, Phone } from "lucide-react";
 import Image from "next/image";
 
 export default function Footer() {
@@ -109,9 +109,22 @@ export default function Footer() {
                 <Mail size={14} strokeWidth={1.5} />
                 info@hydraway.com.tn
               </a>
+              <a
+                href="tel:+21652888739"
+                className="flex items-center gap-2.5 text-sm text-white/45 transition-colors hover:text-white"
+              >
+                <Phone size={14} strokeWidth={1.5} />
+                +216 52 888 739
+              </a>
               <div className="flex items-start gap-2.5 text-sm text-white/45">
                 <MapPin size={14} strokeWidth={1.5} className="mt-0.5 shrink-0" />
-                <span>Tunisie</span>
+                <span>
+                  9 rue Noureddine El Khayechi
+                  <br />
+                  La Marsa Safsaf, 2078 La Marsa
+                  <br />
+                  Tunisie
+                </span>
               </div>
             </div>
           </div>
