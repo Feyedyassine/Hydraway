@@ -274,9 +274,10 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-navy/60">
-                      {t("email")}
+                      {t("email")} *
                     </label>
                     <input
+                      required
                       type="email"
                       value={client.email}
                       onChange={(e) => setClient({ ...client, email: e.target.value })}

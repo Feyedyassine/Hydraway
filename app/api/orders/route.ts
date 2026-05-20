@@ -15,6 +15,7 @@ const MAX_QTY_PER_LINE = 20;
 const MAX_TOTAL_ITEMS = 50;
 const MAX_ORDER_TOTAL_TND = 5000;
 const TUNISIAN_PHONE_REGEX = /^(?:\+216|00216)?(2[0-9]|3[0-9]|4[0-9]|5[0-57-9]|7[0-9]|9[0-9])\d{6}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function verifyTurnstile(token: string, ip: string | null): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY;
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       client: {
         firstName: string;
         lastName: string;
-        email?: string;
+        email: string;
         phone: string;
         address: string;
         city: string;
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
     if (
       !client?.firstName ||
       !client?.lastName ||
+      !client?.email ||
       !client?.phone ||
       !client?.address ||
       !client?.city ||
@@ -89,6 +91,11 @@ export async function POST(req: NextRequest) {
         { error: "Missing required client fields" },
         { status: 400 }
       );
+    }
+
+    const cleanedEmail = client.email.trim().toLowerCase();
+    if (!EMAIL_REGEX.test(cleanedEmail) || cleanedEmail.length > 254) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
     }
 
     // Field-length sanity checks
@@ -191,7 +198,7 @@ export async function POST(req: NextRequest) {
       .values({
         firstName: client.firstName,
         lastName: client.lastName,
-        email: client.email || null,
+        email: cleanedEmail,
         phone: client.phone,
         address: client.address,
         city: client.city,

@@ -292,9 +292,10 @@ export default function OrderForm() {
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-navy/70">
-                      {t("email")}
+                      {t("email")} *
                     </label>
                     <input
+                      required
                       type="email"
                       value={client.email}
                       onChange={(e) => setClient({ ...client, email: e.target.value })}
