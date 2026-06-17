@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { clients, orders, orderItems, products } from "@/lib/db/schema";
+import { clients, orders, orderItems, products, promoCodes } from "@/lib/db/schema";
 import { generatePayment } from "@/lib/flouci";
+import { submitOrderToStockBridge } from "@/lib/stockbridge-submit";
 import {
-  createOrder as createStockBridgeOrder,
-  StockBridgeError,
-  type StockBridgeOrderItemInput,
-} from "@/lib/stockbridge";
-import { eq } from "drizzle-orm";
+  PROMO_CODE_REGEX,
+  evaluatePromo,
+  normalizeCode,
+} from "@/lib/promo";
+import { and, eq, isNull, lt, or, sql } from "drizzle-orm";
 
 const SHIPPING_FEE_TND = 9.5; // 8.5 livraison + 1 timbre fiscal (StockBridge COD)
 
@@ -40,9 +41,10 @@ async function verifyTurnstile(token: string, ip: string | null): Promise<boolea
 }
 
 export async function POST(req: NextRequest) {
+  let claimedPromoId: number | null = null;
   try {
     const body = await req.json();
-    const { client, items, paymentMethod, notes, turnstileToken, hp } = body as {
+    const { client, items, paymentMethod, notes, turnstileToken, hp, promoCode } = body as {
       client: {
         firstName: string;
         lastName: string;
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
       notes?: string;
       turnstileToken?: string;
       hp?: string;
+      promoCode?: string;
     };
 
     // Honeypot: real users leave this empty.
@@ -181,12 +184,67 @@ export async function POST(req: NextRequest) {
       productsTotal += product.price * item.quantity;
     }
 
+    // Promo code: validate and atomically claim a redemption slot.
+    let discountAmount = 0;
+    let promoSnapshot: string | null = null;
+
+    if (promoCode) {
+      const normalized = normalizeCode(promoCode);
+      if (!PROMO_CODE_REGEX.test(normalized)) {
+        return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
+      }
+      const [promo] = await db
+        .select()
+        .from(promoCodes)
+        .where(eq(promoCodes.code, normalized))
+        .limit(1);
+      const result = evaluatePromo(promo, productsTotal);
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: "Promo code is not available", reason: result.reason },
+          { status: 400 }
+        );
+      }
+      // Atomic claim — only succeeds if still active, not expired, under cap.
+      const claimed = await db
+        .update(promoCodes)
+        .set({
+          redemptionsCount: sql`${promoCodes.redemptionsCount} + 1`,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(
+          and(
+            eq(promoCodes.id, promo.id),
+            eq(promoCodes.active, true),
+            isNull(promoCodes.deletedAt),
+            or(
+              isNull(promoCodes.maxRedemptions),
+              lt(promoCodes.redemptionsCount, promoCodes.maxRedemptions)
+            )
+          )
+        )
+        .returning({ id: promoCodes.id });
+      if (claimed.length === 0) {
+        return NextResponse.json(
+          { error: "Promo code is no longer available" },
+          { status: 400 }
+        );
+      }
+      discountAmount = result.discount;
+      claimedPromoId = promo.id;
+      promoSnapshot = normalized;
+    }
+
+    const discountedSubtotal = productsTotal - discountAmount;
+
     // For COD: customer pays products + shipping at delivery.
     // For Flouci: shipping is collected at delivery as well, so the online
     // payment only covers the products.
-    const total = paymentMethod === "cod" ? productsTotal + SHIPPING_FEE_TND : productsTotal;
+    const total =
+      paymentMethod === "cod" ? discountedSubtotal + SHIPPING_FEE_TND : discountedSubtotal;
 
     if (total > MAX_ORDER_TOTAL_TND) {
+      if (claimedPromoId !== null) await releasePromoSlot(claimedPromoId);
       return NextResponse.json(
         { error: `Order total exceeds ${MAX_ORDER_TOTAL_TND} TND — please contact us for large orders` },
         { status: 400 }
@@ -215,6 +273,9 @@ export async function POST(req: NextRequest) {
         paymentStatus: "pending",
         total,
         shippingFee: SHIPPING_FEE_TND,
+        promoCodeId: claimedPromoId,
+        promoCodeSnapshot: promoSnapshot,
+        discountAmount,
         notes: notes || null,
       })
       .returning();
@@ -233,16 +294,27 @@ export async function POST(req: NextRequest) {
         .where(eq(products.id, item.productId));
     }
 
+    const priceRatio = productsTotal > 0 ? discountedSubtotal / productsTotal : 1;
+
     // Submit to StockBridge for COD orders. Flouci orders wait for payment
     // confirmation (handled separately) before being pushed.
     if (paymentMethod === "cod") {
-      await submitToStockBridge(order.id, newClient, resolvedItems, client.postalCode);
+      await submitOrderToStockBridge(
+        order.id,
+        newClient,
+        resolvedItems.map((r) => ({
+          product: r.product,
+          quantity: r.quantity,
+          priceHt: Math.round(r.unitPrice * priceRatio * 100) / 100,
+        })),
+        client.postalCode
+      );
     }
 
     if (paymentMethod === "flouci") {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!;
       const payment = await generatePayment({
-        amount: productsTotal,
+        amount: discountedSubtotal,
         orderId: order.id,
         successUrl: `${baseUrl}/api/payments/flouci/verify?payment_id=${order.id}`,
         failUrl: `${baseUrl}/api/payments/flouci/verify?payment_id=${order.id}&status=failed`,
@@ -263,6 +335,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ orderId: order.id, status: "pending" });
   } catch (error) {
     console.error("Order creation error:", error);
+    if (claimedPromoId !== null) await releasePromoSlot(claimedPromoId);
     return NextResponse.json(
       { error: "Failed to create order" },
       { status: 500 }
@@ -270,78 +343,17 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function submitToStockBridge(
-  orderId: number,
-  client: typeof clients.$inferSelect,
-  resolved: {
-    productId: number;
-    quantity: number;
-    unitPrice: number;
-    product: typeof products.$inferSelect;
-  }[],
-  postalCode: string | undefined
-) {
-  const missingMapping = resolved.find((r) => !r.product.stockbridgeProductId || !r.product.sku);
-  if (missingMapping) {
-    await db
-      .update(orders)
-      .set({
-        stockbridgeError: `Product ${missingMapping.product.id} has no StockBridge mapping`,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(orders.id, orderId));
-    return;
-  }
-
-  const sbItems: StockBridgeOrderItemInput[] = resolved.map((r) => ({
-    product_id: r.product.stockbridgeProductId!,
-    sku: r.product.sku!,
-    product_name: r.product.name,
-    quantity: r.quantity,
-    price_ht: r.unitPrice,
-    tax_rate: 0, // Hydraway is VAT-exempt
-  }));
-
+async function releasePromoSlot(promoId: number) {
   try {
-    const sb = await createStockBridgeOrder({
-      external_ref: `HYD-${orderId}`,
-      priority: "normal",
-      shipping_address: {
-        name: `${client.firstName} ${client.lastName}`.trim(),
-        phone: client.phone,
-        address: client.address,
-        city: client.city,
-        postal_code: postalCode || "0000",
-        governorate: client.governorate,
-        country_code: "TN",
-      },
-      items: sbItems,
-    });
-
     await db
-      .update(orders)
+      .update(promoCodes)
       .set({
-        stockbridgeOrderId: sb.id,
-        stockbridgeInternalRef: sb.internal_ref,
-        stockbridgeStatus: sb.status,
-        stockbridgeError: null,
+        redemptionsCount: sql`MAX(${promoCodes.redemptionsCount} - 1, 0)`,
         updatedAt: new Date().toISOString(),
       })
-      .where(eq(orders.id, orderId));
+      .where(eq(promoCodes.id, promoId));
   } catch (err) {
-    const msg =
-      err instanceof StockBridgeError
-        ? `${err.code}: ${err.message}`
-        : err instanceof Error
-          ? err.message
-          : "Unknown StockBridge error";
-    console.error(`StockBridge submission failed for order ${orderId}:`, msg);
-    await db
-      .update(orders)
-      .set({
-        stockbridgeError: msg,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(orders.id, orderId));
+    console.error(`Failed to release promo slot for promo ${promoId}:`, err);
   }
 }
+

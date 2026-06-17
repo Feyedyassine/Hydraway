@@ -58,20 +58,22 @@ export async function GET() {
   }
 }
 
-// PUT /api/admin/orders — Update order status
+// PUT /api/admin/orders — Update order status OR payment status
 export async function PUT(req: NextRequest) {
   try {
-    await requireAuth();
+    const session = await requireAuth();
     const body = await req.json();
 
-    if (!body.id || !body.status) {
+    if (!body.id) {
+      return NextResponse.json({ error: "Order ID required" }, { status: 400 });
+    }
+    if (!body.status && !body.paymentStatus) {
       return NextResponse.json(
-        { error: "Order ID and status required" },
+        { error: "status or paymentStatus required" },
         { status: 400 }
       );
     }
 
-    // Fetch current order
     const [order] = await db
       .select()
       .from(orders)
@@ -81,7 +83,26 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Enforce valid transitions
+    // Payment-status changes are admin-only (financial).
+    if (body.paymentStatus) {
+      if (session.role !== "admin") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 401 });
+      }
+      if (!["pending", "paid", "failed"].includes(body.paymentStatus)) {
+        return NextResponse.json({ error: "Invalid paymentStatus" }, { status: 400 });
+      }
+      const [updated] = await db
+        .update(orders)
+        .set({
+          paymentStatus: body.paymentStatus,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(orders.id, body.id))
+        .returning();
+      return NextResponse.json(updated);
+    }
+
+    // Status change — enforce valid transitions.
     const allowed = TRANSITIONS[order.status] || [];
     if (!allowed.includes(body.status)) {
       return NextResponse.json(
@@ -90,7 +111,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Append to status history
     const history = JSON.parse(order.statusHistory || "[]");
     history.push({
       from: order.status,
@@ -98,7 +118,8 @@ export async function PUT(req: NextRequest) {
       at: new Date().toISOString(),
     });
 
-    // Auto-mark COD payment as paid on delivery
+    // Auto-mark COD payment as paid on delivery (NET-30 bulk orders are
+    // marked manually by admin via paymentStatus).
     const paymentUpdate =
       body.status === "delivered" && order.paymentMethod === "cod"
         ? { paymentStatus: "paid" as const }

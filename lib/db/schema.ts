@@ -55,7 +55,8 @@ export const orders = sqliteTable("orders", {
     .notNull()
     .default("pending"),
   statusHistory: text("status_history").default("[]"),
-  paymentMethod: text("payment_method", { enum: ["cod", "flouci"] }).notNull(),
+  paymentMethod: text("payment_method", { enum: ["cod", "flouci", "net30"] }).notNull(),
+  orderType: text("order_type", { enum: ["retail", "bulk"] }).notNull().default("retail"),
   paymentStatus: text("payment_status", {
     enum: ["pending", "paid", "failed"],
   })
@@ -71,6 +72,9 @@ export const orders = sqliteTable("orders", {
   deliveredAt: text("delivered_at"),
   total: real("total").notNull(),
   shippingFee: real("shipping_fee").notNull().default(9.5),
+  promoCodeId: integer("promo_code_id").references(() => promoCodes.id),
+  promoCodeSnapshot: text("promo_code_snapshot"),
+  discountAmount: real("discount_amount"),
   notes: text("notes"),
   createdAt: text("created_at")
     .notNull()
@@ -91,6 +95,24 @@ export const contactMessages = sqliteTable("contact_messages", {
     .notNull()
     .default("new"),
   createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
+export const promoCodes = sqliteTable("promo_codes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  code: text("code").notNull().unique(),
+  type: text("type", { enum: ["percentage", "fixed"] }).notNull(),
+  value: real("value").notNull(),
+  maxRedemptions: integer("max_redemptions"),
+  redemptionsCount: integer("redemptions_count").notNull().default(0),
+  expiresAt: text("expires_at"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  deletedAt: text("deleted_at"),
+  createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updatedAt: text("updated_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
 });

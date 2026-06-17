@@ -576,7 +576,15 @@
     "successMessage": "Votre commande #{id} a été passée avec succès. Nous vous contacterons bientôt pour confirmer la livraison.",
     "backHome": "Retour à l'accueil",
     "phoneInvalid": "Numéro de téléphone tunisien invalide",
-    "phoneLength": "Le numéro doit contenir 8 chiffres"
+    "phoneLength": "Le numéro doit contenir 8 chiffres",
+    "promoLabel": "Code promo",
+    "promoPlaceholder": "Entrer un code",
+    "promoApply": "Appliquer",
+    "promoApplied": "Réduction",
+    "promoRemove": "Retirer",
+    "promoUnknown": "Code invalide",
+    "promoExpired": "Code expiré",
+    "promoExhausted": "Code épuisé"
   },
   "order": {
     "title": "Commander",
@@ -605,6 +613,14 @@
     "placeOrder": "Confirmer la commande",
     "processing": "Traitement...",
     "successTitle": "Commande confirmée !",
-    "successMessage": "Votre commande #{id} a été passée avec succès. Nous vous contacterons bientôt pour confirmer la livraison."
+    "successMessage": "Votre commande #{id} a été passée avec succès. Nous vous contacterons bientôt pour confirmer la livraison.",
+    "promoLabel": "Code promo",
+    "promoPlaceholder": "Entrer un code",
+    "promoApply": "Appliquer",
+    "promoApplied": "Réduction",
+    "promoRemove": "Retirer",
+    "promoUnknown": "Code invalide",
+    "promoExpired": "Code expiré",
+    "promoExhausted": "Code épuisé"
   }
 }

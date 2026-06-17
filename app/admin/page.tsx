@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { ChevronDown, Search, ChevronLeft, ChevronRight, Check, AlertTriangle, Truck, Link as LinkIcon } from "lucide-react";
+import { ChevronDown, Search, ChevronLeft, ChevronRight, Check, AlertTriangle, Truck, Link as LinkIcon, Tag, Plus, Package } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useToast } from "./toast";
 
 function timeAgo(date: string) {
@@ -30,7 +31,11 @@ interface Order {
   status: string;
   paymentMethod: string;
   paymentStatus: string;
+  orderType: "retail" | "bulk";
   total: number;
+  shippingFee: number;
+  promoCodeSnapshot: string | null;
+  discountAmount: number | null;
   createdAt: string;
   statusHistory: string | null;
   stockbridgeOrderId: string | null;
@@ -194,12 +199,14 @@ function LegacyStepIndicator({ status, paymentMethod }: { status: string; paymen
 }
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [page, setPage] = useState(1);
   const toast = useToast();
 
@@ -224,19 +231,41 @@ export default function OrdersPage() {
         `${o.client.firstName} ${o.client.lastName}`.toLowerCase().includes(q) ||
         `#${o.id}`.includes(q) ||
         (o.stockbridgeInternalRef?.toLowerCase().includes(q) ?? false) ||
-        (o.trackingNumber?.toLowerCase().includes(q) ?? false);
+        (o.trackingNumber?.toLowerCase().includes(q) ?? false) ||
+        (o.promoCodeSnapshot?.toLowerCase().includes(q) ?? false);
       const matchesStatus = !statusFilter || o.status === statusFilter;
       const matchesPayment = !paymentFilter || o.paymentMethod === paymentFilter;
-      return matchesSearch && matchesStatus && matchesPayment;
+      const matchesType = !typeFilter || o.orderType === typeFilter;
+      return matchesSearch && matchesStatus && matchesPayment && matchesType;
     });
-  }, [orders, search, statusFilter, paymentFilter]);
+  }, [orders, search, statusFilter, paymentFilter, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, paymentFilter]);
+  }, [search, statusFilter, paymentFilter, typeFilter]);
+
+  const markPaid = async (orderId: number) => {
+    if (!confirm("Mark this order as paid? This is irreversible from the UI.")) return;
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: orderId, paymentStatus: "paid" }),
+      });
+      if (res.ok) {
+        toast.success(`Order #${orderId} marked as paid`);
+        fetchOrders();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to update payment");
+      }
+    } catch {
+      toast.error("Failed to update payment");
+    }
+  };
 
   const updateStatus = async (orderId: number, newStatus: string) => {
     if (newStatus === "cancelled" && !confirm("Are you sure you want to cancel this order?")) return;
@@ -267,10 +296,19 @@ export default function OrdersPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-        <span className="text-sm text-gray-500">
-          {filtered.length} of {orders.length} orders
-        </span>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+          <span className="text-sm text-gray-500">
+            {filtered.length} of {orders.length} orders
+          </span>
+        </div>
+        <button
+          onClick={() => router.push("/admin/orders/new")}
+          className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+        >
+          <Plus size={16} />
+          New Bulk Order
+        </button>
       </div>
 
       {/* Filters */}
@@ -280,7 +318,7 @@ export default function OrdersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, order #, SB ref, or tracking..."
+            placeholder="Search by name, order #, promo, SB ref, or tracking..."
             className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-gray-900"
           />
         </div>
@@ -304,6 +342,16 @@ export default function OrdersPage() {
           <option value="">All payments</option>
           <option value="cod">COD</option>
           <option value="flouci">Flouci</option>
+          <option value="net30">NET-30</option>
+        </select>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
+        >
+          <option value="">All types</option>
+          <option value="retail">Retail</option>
+          <option value="bulk">Bulk</option>
         </select>
       </div>
 
@@ -348,6 +396,15 @@ export default function OrdersPage() {
                         )}
                       </div>
                     )}
+                    {order.promoCodeSnapshot && (
+                      <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-green-700">
+                        <Tag size={10} />
+                        <span className="font-mono font-semibold">{order.promoCodeSnapshot}</span>
+                        {order.discountAmount !== null && order.discountAmount > 0 && (
+                          <span className="text-green-600">−{order.discountAmount.toFixed(2)} TND</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="hidden md:block">
                     {linked && sbStatus ? (
@@ -365,14 +422,26 @@ export default function OrdersPage() {
                   >
                     {linked && sbStatus ? sbStatus : order.status}
                   </span>
+                  {order.orderType === "bulk" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700">
+                      <Package size={11} />
+                      BULK
+                    </span>
+                  )}
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                       order.paymentMethod === "flouci"
                         ? "bg-orange-100 text-orange-700"
-                        : "bg-gray-100 text-gray-600"
+                        : order.paymentMethod === "net30"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {order.paymentMethod === "cod" ? "COD" : "Flouci"}
+                    {order.paymentMethod === "cod"
+                      ? "COD"
+                      : order.paymentMethod === "flouci"
+                        ? "Flouci"
+                        : "NET-30"}
                   </span>
                   <span className="w-20 text-right text-sm font-semibold text-gray-900">
                     {order.total.toFixed(2)} TND
@@ -423,11 +492,64 @@ export default function OrdersPage() {
                             {item.quantity}x {item.productName} — {item.unitPrice.toFixed(2)} TND
                           </div>
                         ))}
+                        {(() => {
+                          const discount = order.discountAmount ?? 0;
+                          const shipping = order.shippingFee ?? 0;
+                          const subtotal = order.total - shipping + discount;
+                          if (!order.promoCodeSnapshot && shipping === 0) return null;
+                          return (
+                            <div className="mt-3 space-y-1 border-t border-gray-100 pt-2 text-xs">
+                              <div className="flex justify-between text-gray-500">
+                                <span>Subtotal</span>
+                                <span>{subtotal.toFixed(2)} TND</span>
+                              </div>
+                              {order.promoCodeSnapshot && discount > 0 && (
+                                <div className="flex justify-between text-green-700">
+                                  <span className="flex items-center gap-1">
+                                    <Tag size={10} />
+                                    <span className="font-mono">{order.promoCodeSnapshot}</span>
+                                  </span>
+                                  <span>−{discount.toFixed(2)} TND</span>
+                                </div>
+                              )}
+                              {shipping > 0 && (
+                                <div className="flex justify-between text-gray-500">
+                                  <span>Shipping</span>
+                                  <span>{shipping.toFixed(2)} TND</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between border-t border-gray-100 pt-1 font-semibold text-gray-900">
+                                <span>Total</span>
+                                <span>{order.total.toFixed(2)} TND</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Status / actions */}
                       <div>
                         <h3 className="mb-2 text-xs font-semibold uppercase text-gray-400">Status</h3>
+
+                        {order.paymentMethod === "net30" && (
+                          <div className="mb-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs text-purple-900">
+                            <p className="font-medium">NET-30 wholesale order</p>
+                            <p className="mt-0.5 text-purple-700">
+                              Payment:{" "}
+                              <span className="font-semibold">
+                                {order.paymentStatus === "paid" ? "Paid ✓" : "Pending"}
+                              </span>
+                            </p>
+                            {order.paymentStatus === "pending" && (
+                              <button
+                                onClick={() => markPaid(order.id)}
+                                className="mt-2 rounded-md bg-purple-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-purple-700"
+                              >
+                                Mark as paid
+                              </button>
+                            )}
+                          </div>
+                        )}
 
                         {linked ? (
                           <div className="space-y-2 text-sm">

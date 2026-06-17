@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Script from "next/script";
-import { ShoppingBag, Minus, Plus, CreditCard, Truck } from "lucide-react";
+import { ShoppingBag, Minus, Plus, CreditCard, Truck, Tag, X } from "lucide-react";
 
 declare global {
   interface Window {
@@ -52,6 +52,10 @@ export default function OrderForm() {
   });
   const [hp, setHp] = useState(""); // honeypot
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoApplied, setPromoApplied] = useState<{ code: string; discount: number } | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoApplying, setPromoApplying] = useState(false);
   const turnstileMounted = useRef(false);
   const turnstileWidgetId = useRef<string | null>(null);
 
@@ -106,6 +110,47 @@ export default function OrderForm() {
   }, 0);
 
   const cartEmpty = Object.keys(cart).length === 0;
+  const discount = promoApplied?.discount ?? 0;
+  const discountedSubtotal = Math.max(0, total - discount);
+
+  const applyPromo = async () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromoApplying(true);
+    setPromoError("");
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal: total }),
+      });
+      const data = (await res.json()) as
+        | { valid: true; code: string; discount: number }
+        | { valid: false; reason: string };
+      if (data.valid) {
+        setPromoApplied({ code: data.code, discount: data.discount });
+        setPromoInput("");
+      } else {
+        const map: Record<string, string> = {
+          unknown: t("promoUnknown"),
+          inactive: t("promoUnknown"),
+          expired: t("promoExpired"),
+          exhausted: t("promoExhausted"),
+          invalid_subtotal: t("promoUnknown"),
+        };
+        setPromoError(map[data.reason] || t("promoUnknown"));
+      }
+    } catch {
+      setPromoError(t("promoUnknown"));
+    } finally {
+      setPromoApplying(false);
+    }
+  };
+
+  const removePromo = () => {
+    setPromoApplied(null);
+    setPromoError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +170,14 @@ export default function OrderForm() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client, items, paymentMethod, turnstileToken, hp }),
+        body: JSON.stringify({
+          client,
+          items,
+          paymentMethod,
+          turnstileToken,
+          hp,
+          promoCode: promoApplied?.code,
+        }),
       });
 
       const data = await res.json();
@@ -397,12 +449,78 @@ export default function OrderForm() {
                   </div>
                 </div>
 
+                {/* Promo code */}
+                <div className="mt-6">
+                  <label className="mb-1.5 block text-xs font-medium text-navy/60">
+                    {t("promoLabel")}
+                  </label>
+                  {promoApplied ? (
+                    <div className="flex items-center justify-between rounded-xl bg-green-50 px-3 py-2.5">
+                      <span className="font-mono text-sm font-semibold text-green-800">
+                        {promoApplied.code}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={removePromo}
+                        className="flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-900"
+                      >
+                        <X size={14} />
+                        {t("promoRemove")}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoInput}
+                          onChange={(e) =>
+                            setPromoInput(
+                              e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "")
+                            )
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              applyPromo();
+                            }
+                          }}
+                          placeholder={t("promoPlaceholder")}
+                          className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 font-mono text-sm outline-none focus:border-navy"
+                        />
+                        <button
+                          type="button"
+                          onClick={applyPromo}
+                          disabled={!promoInput || promoApplying}
+                          className="rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-light disabled:opacity-40"
+                        >
+                          {promoApplying ? "…" : t("promoApply")}
+                        </button>
+                      </div>
+                      {promoError && (
+                        <p className="mt-1.5 text-xs text-red-500">{promoError}</p>
+                      )}
+                    </>
+                  )}
+                </div>
+
                 {/* Summary */}
                 <div className="mt-6 space-y-1.5 rounded-xl bg-ice-light px-5 py-4">
                   <div className="flex justify-between text-sm text-navy/60">
                     <span>{t("subtotal")}</span>
                     <span className="font-semibold text-navy">{total.toFixed(2)} TND</span>
                   </div>
+                  {promoApplied && (
+                    <div className="flex justify-between text-sm">
+                      <span className="flex items-center gap-1.5 text-green-700">
+                        <Tag size={13} />
+                        {t("promoApplied")} ({promoApplied.code})
+                      </span>
+                      <span className="font-semibold text-green-700">
+                        −{promoApplied.discount.toFixed(2)} TND
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm text-navy/60">
                     <span>{t("shipping")}</span>
                     <span className="font-semibold text-navy">{SHIPPING_FEE.toFixed(2)} TND</span>
@@ -410,7 +528,7 @@ export default function OrderForm() {
                   <div className="mt-2 flex justify-between border-t border-navy/10 pt-2 text-sm">
                     <span className="font-semibold text-navy">{t("total")}</span>
                     <span className="font-bold text-navy">
-                      {(total + SHIPPING_FEE).toFixed(2)} TND
+                      {(discountedSubtotal + SHIPPING_FEE).toFixed(2)} TND
                     </span>
                   </div>
                   <p className="pt-1 text-[11px] text-navy/40">{t("shippingNote")}</p>

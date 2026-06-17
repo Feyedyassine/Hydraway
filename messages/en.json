@@ -576,7 +576,15 @@
     "successMessage": "Your order #{id} has been placed successfully. We will contact you shortly to confirm delivery.",
     "backHome": "Back to Home",
     "phoneInvalid": "Invalid Tunisian phone number",
-    "phoneLength": "Phone number must be 8 digits"
+    "phoneLength": "Phone number must be 8 digits",
+    "promoLabel": "Promo code",
+    "promoPlaceholder": "Enter a code",
+    "promoApply": "Apply",
+    "promoApplied": "Discount",
+    "promoRemove": "Remove",
+    "promoUnknown": "Invalid code",
+    "promoExpired": "Code expired",
+    "promoExhausted": "Code no longer available"
   },
   "order": {
     "title": "Order Now",
@@ -605,6 +613,14 @@
     "placeOrder": "Place Order",
     "processing": "Processing...",
     "successTitle": "Order Confirmed!",
-    "successMessage": "Your order #{id} has been placed successfully. We will contact you shortly to confirm delivery."
+    "successMessage": "Your order #{id} has been placed successfully. We will contact you shortly to confirm delivery.",
+    "promoLabel": "Promo code",
+    "promoPlaceholder": "Enter a code",
+    "promoApply": "Apply",
+    "promoApplied": "Discount",
+    "promoRemove": "Remove",
+    "promoUnknown": "Invalid code",
+    "promoExpired": "Code expired",
+    "promoExhausted": "Code no longer available"
   }
 }
