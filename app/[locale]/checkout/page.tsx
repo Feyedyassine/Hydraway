@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useCart } from "@/lib/cart-context";
+import { fbTrack } from "@/lib/fb-pixel";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Script from "next/script";
@@ -53,6 +54,7 @@ export default function CheckoutPage() {
   const [promoApplying, setPromoApplying] = useState(false);
   const turnstileMounted = useRef(false);
   const turnstileWidgetId = useRef<string | null>(null);
+  const checkoutTracked = useRef(false);
 
   const SHIPPING_FEE = 9.5;
   const discount = promoApplied?.discount ?? 0;
@@ -76,6 +78,21 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (window.turnstile) renderTurnstile();
   }, []);
+
+  // Fire InitiateCheckout once the cart is loaded (localStorage hydrates
+  // after first render, so wait until items are present).
+  useEffect(() => {
+    if (checkoutTracked.current || items.length === 0) return;
+    checkoutTracked.current = true;
+    fbTrack("InitiateCheckout", {
+      content_ids: items.map((i) => String(i.productId)),
+      contents: items.map((i) => ({ id: String(i.productId), quantity: i.quantity })),
+      content_type: "product",
+      num_items: items.reduce((sum, i) => sum + i.quantity, 0),
+      value: total,
+      currency: "TND",
+    });
+  }, [items, total]);
 
   const validatePhone = (phone: string): boolean => {
     const cleaned = phone.replace(/[\s\-().]/g, "");
@@ -186,6 +203,15 @@ export default function CheckoutPage() {
         window.location.href = data.paymentUrl;
         return;
       }
+
+      fbTrack("Purchase", {
+        content_ids: items.map((i) => String(i.productId)),
+        contents: items.map((i) => ({ id: String(i.productId), quantity: i.quantity })),
+        content_type: "product",
+        num_items: items.reduce((sum, i) => sum + i.quantity, 0),
+        value: grandTotal,
+        currency: "TND",
+      });
 
       clearCart();
       setResult({ success: true, orderId: data.orderId });

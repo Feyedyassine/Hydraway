@@ -3,16 +3,11 @@
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { fbTrack } from "@/lib/fb-pixel";
 
 // Paste your Pixel ID from Meta Events Manager (a ~15-digit number).
 // The pixel stays disabled while this is empty.
 const FB_PIXEL_ID = "27199010119782023";
-
-declare global {
-  interface Window {
-    fbq?: (...args: unknown[]) => void;
-  }
-}
 
 export default function FacebookPixel() {
   const pathname = usePathname();
@@ -25,7 +20,7 @@ export default function FacebookPixel() {
       isInitialLoad.current = false;
       return;
     }
-    window.fbq?.("track", "PageView");
+    fbTrack("PageView");
   }, [pathname]);
 
   if (!FB_PIXEL_ID) return null;
@@ -47,6 +42,7 @@ export default function FacebookPixel() {
         `}
       </Script>
       <noscript>
+        {/* eslint-disable-next-line @next/next/no-img-element -- 1x1 tracking pixel, not a content image */}
         <img
           height="1"
           width="1"

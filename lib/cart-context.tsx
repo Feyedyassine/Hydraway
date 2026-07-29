@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { fbTrack } from "@/lib/fb-pixel";
 
 export interface CartItem {
   productId: number;
@@ -49,6 +50,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((item: Omit<CartItem, "quantity">) => {
     if (item.stock <= 0) return;
+    fbTrack("AddToCart", {
+      content_ids: [String(item.productId)],
+      content_name: item.name,
+      content_type: "product",
+      value: item.price,
+      currency: "TND",
+    });
     setItems((prev) => {
       const existing = prev.find((i) => i.productId === item.productId);
       if (existing) {
