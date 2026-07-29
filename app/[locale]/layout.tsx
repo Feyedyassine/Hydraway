@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Script from "next/script";
 import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/lib/cart-context";
+import FacebookPixel from "./components/FacebookPixel";
 
 const GA_MEASUREMENT_ID = "G-76G8698N1H";
 
@@ -38,6 +39,7 @@ export default async function LocaleLayout({
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
+        <FacebookPixel />
       </CartProvider>
     </NextIntlClientProvider>
   );

@@ -16,10 +16,17 @@ const bodyFont = DM_Sans({
   display: "swap",
 });
 
+// Paste the code from Meta Business Manager → Brand Safety → Domains
+// (the `content` value of the facebook-domain-verification meta tag).
+const FB_DOMAIN_VERIFICATION = "37kv7ent732uk8pvwaahodku040u3h";
+
 export const metadata: Metadata = {
   title: "HydraWay — Hydrate better. Live better.",
   description:
     "Solution d'hydratation premium en Tunisie. Électrolytes, vitamines et minéraux essentiels sans sucre.",
+  ...(FB_DOMAIN_VERIFICATION
+    ? { other: { "facebook-domain-verification": FB_DOMAIN_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({
