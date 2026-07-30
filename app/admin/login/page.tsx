@@ -22,13 +22,15 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error || "Login failed");
         return;
       }
 
-      router.push("/admin");
+      // Support users have no access to Orders — land them on Clients
+      router.push(data.user?.role === "support" ? "/admin/clients" : "/admin");
     } catch {
       setError("Network error");
     } finally {

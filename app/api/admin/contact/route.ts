@@ -7,7 +7,7 @@ import { desc, eq } from "drizzle-orm";
 // GET /api/admin/contact
 export async function GET() {
   try {
-    await requireAuth();
+    await requireAuth(["admin", "support"]);
     const all = await db
       .select()
       .from(contactMessages)
@@ -28,7 +28,7 @@ export async function GET() {
 // PUT /api/admin/contact — update status
 export async function PUT(req: NextRequest) {
   try {
-    await requireAuth();
+    await requireAuth(["admin", "support"]);
     const { id, status } = await req.json();
 
     if (!id || !status || !["new", "read", "replied"].includes(status)) {

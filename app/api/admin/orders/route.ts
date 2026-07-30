@@ -17,7 +17,7 @@ const TRANSITIONS: Record<string, string[]> = {
 // GET /api/admin/orders
 export async function GET() {
   try {
-    await requireAuth();
+    await requireAuth(["admin", "warehouse"]);
 
     const allOrders = await db
       .select()
@@ -61,7 +61,7 @@ export async function GET() {
 // PUT /api/admin/orders — Update order status OR payment status
 export async function PUT(req: NextRequest) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(["admin", "warehouse"]);
     const body = await req.json();
 
     if (!body.id) {

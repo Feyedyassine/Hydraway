@@ -6,11 +6,38 @@ import { Package, ShoppingCart, Users, LogOut, Menu, X, LayoutDashboard, Message
 import Image from "next/image";
 import { ToastProvider } from "./toast";
 
+type Role = "admin" | "warehouse" | "support";
+
 interface User {
   userId: number;
   name?: string;
   email: string;
-  role: "admin" | "warehouse";
+  role: Role;
+}
+
+const NAV_ITEMS: { href: string; label: string; icon: typeof LayoutDashboard; roles: Role[] }[] = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin"] },
+  { href: "/admin", label: "Orders", icon: ShoppingCart, roles: ["admin", "warehouse"] },
+  { href: "/admin/products", label: "Products", icon: Package, roles: ["admin"] },
+  { href: "/admin/clients", label: "Clients", icon: Users, roles: ["admin", "support"] },
+  { href: "/admin/promos", label: "Promos", icon: Tag, roles: ["admin"] },
+  { href: "/admin/contact", label: "Messages", icon: MessageSquare, roles: ["admin", "support"] },
+  { href: "/admin/users", label: "Team", icon: UserCog, roles: ["admin"] },
+  { href: "/admin/profile", label: "My Profile", icon: User, roles: ["admin", "warehouse", "support"] },
+];
+
+const ROLE_HOME: Record<Role, string> = {
+  admin: "/admin",
+  warehouse: "/admin",
+  support: "/admin/clients",
+};
+
+// Which nav section does a path belong to? Longest href prefix wins,
+// so /admin/orders/new maps to /admin (Orders), not nothing.
+function sectionFor(pathname: string) {
+  return NAV_ITEMS
+    .filter((i) => pathname === i.href || pathname.startsWith(i.href + "/") || (i.href === "/admin" && pathname.startsWith("/admin/orders")))
+    .sort((a, b) => b.href.length - a.href.length)[0];
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -32,6 +59,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .finally(() => setLoading(false));
   }, [router, pathname]);
 
+  // Redirect users who land on a page their role can't access
+  useEffect(() => {
+    if (!user || pathname.includes("/admin/login")) return;
+    const section = sectionFor(pathname);
+    if (section && !section.roles.includes(user.role)) {
+      router.replace(ROLE_HOME[user.role]);
+    }
+  }, [user, pathname, router]);
+
   const logout = async () => {
     await fetch("/api/admin/auth", { method: "DELETE" });
     router.push("/admin/login");
@@ -52,21 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!user) return null;
 
-  const navItems = [
-    { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, warehouse: false },
-    { href: "/admin", label: "Orders", icon: ShoppingCart, warehouse: true },
-    { href: "/admin/products", label: "Products", icon: Package, warehouse: false },
-    { href: "/admin/clients", label: "Clients", icon: Users, warehouse: false },
-    { href: "/admin/promos", label: "Promos", icon: Tag, warehouse: false },
-    { href: "/admin/contact", label: "Messages", icon: MessageSquare, warehouse: false },
-    { href: "/admin/users", label: "Team", icon: UserCog, warehouse: false },
-    { href: "/admin/profile", label: "My Profile", icon: User, warehouse: true },
-  ];
-
-  // Filter for warehouse: only orders + own profile
-  const visibleNav = user.role === "warehouse"
-    ? navItems.filter((item) => item.warehouse)
-    : navItems;
+  const visibleNav = NAV_ITEMS.filter((item) => item.roles.includes(user.role));
 
   return (
     <ToastProvider>

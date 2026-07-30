@@ -7,7 +7,7 @@ import { desc } from "drizzle-orm";
 // GET /api/admin/clients
 export async function GET() {
   try {
-    await requireAuth();
+    await requireAuth(["admin", "support"]);
     const all = await db.select().from(clients).orderBy(desc(clients.createdAt));
     return NextResponse.json(all);
   } catch (error) {

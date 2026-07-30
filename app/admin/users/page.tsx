@@ -4,25 +4,27 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { useToast } from "../toast";
 
+type Role = "admin" | "warehouse" | "support";
+
 interface User {
   id: number;
   email: string;
   name: string;
-  role: "admin" | "warehouse";
+  role: Role;
   createdAt: string;
 }
 
 interface Me {
   userId: number;
   email: string;
-  role: "admin" | "warehouse";
+  role: Role;
 }
 
 const emptyForm = {
   name: "",
   email: "",
   password: "",
-  role: "admin" as "admin" | "warehouse",
+  role: "admin" as Role,
 };
 
 export default function UsersPage() {
@@ -139,7 +141,9 @@ export default function UsersPage() {
                       className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                         u.role === "admin"
                           ? "bg-purple-100 text-purple-700"
-                          : "bg-blue-100 text-blue-700"
+                          : u.role === "support"
+                            ? "bg-teal-100 text-teal-700"
+                            : "bg-blue-100 text-blue-700"
                       }`}
                     >
                       {u.role}
@@ -226,12 +230,13 @@ export default function UsersPage() {
                 <select
                   value={form.role}
                   onChange={(e) =>
-                    setForm({ ...form, role: e.target.value as "admin" | "warehouse" })
+                    setForm({ ...form, role: e.target.value as Role })
                   }
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
                 >
                   <option value="admin">Admin (full access)</option>
                   <option value="warehouse">Warehouse (orders only)</option>
+                  <option value="support">Support (clients &amp; messages only)</option>
                 </select>
               </div>
             </div>

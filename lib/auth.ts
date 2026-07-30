@@ -6,10 +6,12 @@ import { eq } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "hydraway-dev-secret-change-me";
 
+export type Role = "admin" | "warehouse" | "support";
+
 export interface TokenPayload {
   userId: number;
   email: string;
-  role: "admin" | "warehouse";
+  role: Role;
 }
 
 export function signToken(payload: TokenPayload): string {
@@ -32,7 +34,7 @@ export async function getSession(): Promise<TokenPayload | null> {
 }
 
 export async function requireAuth(
-  allowedRoles?: ("admin" | "warehouse")[]
+  allowedRoles?: Role[]
 ): Promise<TokenPayload> {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");

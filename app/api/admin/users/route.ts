@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       name?: string;
       email?: string;
       password?: string;
-      role?: "admin" | "warehouse";
+      role?: "admin" | "warehouse" | "support";
     };
 
     if (!name || !email || !password || !role) {
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (!["admin", "warehouse"].includes(role)) {
+    if (!["admin", "warehouse", "support"].includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
     const normalizedEmail = email.trim().toLowerCase();
