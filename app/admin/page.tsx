@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { ChevronDown, Search, ChevronLeft, ChevronRight, Check, AlertTriangle, Truck, Link as LinkIcon, Tag, Plus, Package } from "lucide-react";
+import { ChevronDown, Search, ChevronLeft, ChevronRight, Check, AlertTriangle, Truck, Link as LinkIcon, Tag, Plus, Package, Gift } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "./toast";
 
@@ -36,6 +36,8 @@ interface Order {
   shippingFee: number;
   promoCodeSnapshot: string | null;
   discountAmount: number | null;
+  promotionSnapshot: string | null;
+  promotionDiscount: number | null;
   createdAt: string;
   statusHistory: string | null;
   stockbridgeOrderId: string | null;
@@ -57,7 +59,18 @@ interface Order {
     productName: string;
     quantity: number;
     unitPrice: number;
+    freeQuantity: number | null;
   }[];
+}
+
+/** The promotion name, read back from the snapshot stored on the order. */
+function promotionName(snapshot: string | null): string | null {
+  if (!snapshot) return null;
+  try {
+    return (JSON.parse(snapshot) as { name?: string }).name ?? null;
+  } catch {
+    return null;
+  }
 }
 
 const STATUS_OPTIONS = ["pending", "confirmed", "shipped", "delivered", "cancelled", "returned"];
@@ -487,29 +500,59 @@ export default function OrdersPage() {
                       {/* Items */}
                       <div>
                         <h3 className="mb-2 text-xs font-semibold uppercase text-gray-400">Items</h3>
-                        {order.items.map((item, i) => (
-                          <div key={i} className="text-sm text-gray-700">
-                            {item.quantity}x {item.productName} — {item.unitPrice.toFixed(2)} TND
-                          </div>
-                        ))}
+                        {order.items.map((item, i) => {
+                          const free = item.freeQuantity ?? 0;
+                          return (
+                            <div key={i} className="text-sm text-gray-700">
+                              {item.quantity}x {item.productName} —{" "}
+                              {item.unitPrice.toFixed(2)} TND
+                              {free > 0 && (
+                                <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                                  {free} free ({(item.quantity - free)} charged)
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                         {(() => {
-                          const discount = order.discountAmount ?? 0;
+                          const codeDiscount = order.discountAmount ?? 0;
+                          const promoDiscount = order.promotionDiscount ?? 0;
+                          const discount = codeDiscount + promoDiscount;
                           const shipping = order.shippingFee ?? 0;
                           const subtotal = order.total - shipping + discount;
-                          if (!order.promoCodeSnapshot && shipping === 0) return null;
+                          const promotion = promotionName(order.promotionSnapshot);
+                          if (!order.promoCodeSnapshot && promoDiscount === 0 && shipping === 0)
+                            return null;
                           return (
                             <div className="mt-3 space-y-1 border-t border-gray-100 pt-2 text-xs">
                               <div className="flex justify-between text-gray-500">
                                 <span>Subtotal</span>
                                 <span>{subtotal.toFixed(2)} TND</span>
                               </div>
-                              {order.promoCodeSnapshot && discount > 0 && (
+                              {promoDiscount > 0 && (
                                 <div className="flex justify-between text-green-700">
+                                  <span className="flex items-center gap-1">
+                                    <Gift size={10} />
+                                    <span>{promotion ?? "Promotion"}</span>
+                                  </span>
+                                  <span>−{promoDiscount.toFixed(2)} TND</span>
+                                </div>
+                              )}
+                              {order.promoCodeSnapshot && (
+                                <div
+                                  className={`flex justify-between ${
+                                    codeDiscount > 0 ? "text-green-700" : "text-gray-400"
+                                  }`}
+                                >
                                   <span className="flex items-center gap-1">
                                     <Tag size={10} />
                                     <span className="font-mono">{order.promoCodeSnapshot}</span>
                                   </span>
-                                  <span>−{discount.toFixed(2)} TND</span>
+                                  <span>
+                                    {codeDiscount > 0
+                                      ? `−${codeDiscount.toFixed(2)} TND`
+                                      : "attribution only"}
+                                  </span>
                                 </div>
                               )}
                               {shipping > 0 && (

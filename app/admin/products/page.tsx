@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
-import { Plus, Pencil, Trash2, X, Search, ChevronLeft, ChevronRight, Upload, Link2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Search, ChevronLeft, ChevronRight, Upload, Link2, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 import { useToast } from "../toast";
+import PromotionForm from "../promotions/PromotionForm";
 
 interface StockBridgeInfo {
   id: string;
@@ -54,6 +55,7 @@ export default function ProductsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [uploading, setUploading] = useState(false);
+  const [promotionFor, setPromotionFor] = useState<number | null>(null);
   const [stockbridgeError, setStockbridgeError] = useState<string | null>(null);
   const [syncedAt, setSyncedAt] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -209,7 +211,8 @@ export default function ProductsPage() {
         setShowForm(false);
         fetchProducts();
       } else {
-        toast.error("Failed to save product");
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Failed to save product");
       }
     } catch {
       toast.error("Failed to save product");
@@ -228,7 +231,8 @@ export default function ProductsPage() {
         toast.success("Product deleted");
         fetchProducts();
       } else {
-        toast.error("Failed to delete product");
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Failed to delete product");
       }
     } catch {
       toast.error("Failed to delete product");
@@ -369,6 +373,14 @@ export default function ProductsPage() {
                   )}
                 </td>
                 <td className="px-5 py-3 text-right">
+                  <button
+                    onClick={() => setPromotionFor(p.id)}
+                    title="Create a promotion on this product"
+                    className="mr-2 inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+                  >
+                    <Sparkles size={12} />
+                    Promotion
+                  </button>
                   <button onClick={() => openEdit(p)} className="mr-2 text-gray-400 hover:text-gray-700">
                     <Pencil size={16} />
                   </button>
@@ -412,6 +424,15 @@ export default function ProductsPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {promotionFor !== null && (
+        <PromotionForm
+          products={products}
+          presetTriggerProductId={promotionFor}
+          onClose={() => setPromotionFor(null)}
+          onSaved={() => {}}
+        />
       )}
 
       {/* Modal form */}

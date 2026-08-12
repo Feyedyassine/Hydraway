@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useEffect, useMemo } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { useCart } from "@/lib/cart-context";
+import { tiersFor } from "@/lib/promotions";
 import Image from "next/image";
 import {
   Package,
@@ -15,6 +16,7 @@ import {
   ShieldCheck,
   Clock,
   ChevronDown,
+  Gift,
 } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 
@@ -41,9 +43,44 @@ interface Product {
 export default function ProductShowcase() {
   const t = useTranslations("product");
   const h = useTranslations("howToUse");
-  const { addItem } = useCart();
+  const locale = useLocale();
+  const { addItem, promotions } = useCart();
   const [howToOpen, setHowToOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+
+  const product = products[0];
+
+  // Volume pricing for this product, so the offer is visible before anything
+  // is added to the cart — the drawer nudge fires too late to shape the choice.
+  const tiers = useMemo(
+    () => (product ? tiersFor(product.id, product.price, promotions) : []),
+    [product, promotions]
+  );
+  // A single-box offer that genuinely lowers the box price reads as a plain
+  // sale, so it belongs on the price itself rather than in the pack panel —
+  // showing the list price and a "1 boîte" row underneath contradicts itself.
+  // A gift at quantity 1 doesn't qualify: the box still costs full price.
+  const saleTier = useMemo(
+    () =>
+      product
+        ? tiers.find((tier) => tier.quantity === 1 && tier.total < product.price) ?? null
+        : null,
+    [tiers, product]
+  );
+
+  const packTiers = useMemo(
+    () => tiers.filter((tier) => tier !== saleTier),
+    [tiers, saleTier]
+  );
+
+  const bestTier = useMemo(
+    () =>
+      packTiers.length > 1
+        ? packTiers.reduce((best, tier) => (tier.perUnit < best.perUnit ? tier : best))
+        : null,
+    [packTiers]
+  );
+  const headlineOff = tiers.reduce((max, tier) => Math.max(max, tier.percentOff), 0);
 
   useEffect(() => {
     fetch("/api/products")
@@ -53,7 +90,6 @@ export default function ProductShowcase() {
   }, []);
 
   const handleAddToCart = () => {
-    const product = products[0];
     if (!product) return;
     addItem({
       productId: product.id,
@@ -84,6 +120,11 @@ export default function ProductShowcase() {
                   height={500}
                   className="h-auto w-full object-cover"
                 />
+                {headlineOff > 0 && (
+                  <span className="absolute right-5 top-5 rounded-full bg-brand-red px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-brand-red/25">
+                    −{headlineOff}%
+                  </span>
+                )}
               </div>
 
               {/* Overlapping smaller image */}
@@ -142,22 +183,113 @@ export default function ProductShowcase() {
                   <span className="text-xs font-semibold uppercase tracking-wider text-navy/40">
                     {t("price")}
                   </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-heading text-4xl font-extrabold text-navy">
-                      {products[0]?.price.toFixed(3) ?? "—"}
-                    </span>
-                    <span className="text-lg font-semibold text-navy/40">TND</span>
-                  </div>
+                  {saleTier && product ? (
+                    <>
+                      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                        <span className="font-heading text-4xl font-extrabold text-brand-red">
+                          {saleTier.total.toFixed(2)}
+                        </span>
+                        <span className="text-lg font-semibold text-brand-red/60">
+                          TND
+                        </span>
+                        <span className="text-lg font-medium text-navy/30 line-through">
+                          {product.price.toFixed(2)}
+                        </span>
+                        <span className="rounded-full bg-brand-red/10 px-2 py-0.5 text-xs font-bold text-brand-red">
+                          −{saleTier.percentOff}%
+                        </span>
+                      </div>
+                      <span className="mt-0.5 block text-[11px] text-navy/35">
+                        {t("tiersNote")}
+                      </span>
+                    </>
+                  ) : (
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-heading text-4xl font-extrabold text-navy">
+                        {product?.price.toFixed(2) ?? "—"}
+                      </span>
+                      <span className="text-lg font-semibold text-navy/40">TND</span>
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={handleAddToCart}
-                  disabled={!products[0] || products[0]?.stock <= 0}
+                  disabled={!product || product.stock <= 0}
                   className="group flex items-center gap-3 rounded-full bg-navy px-8 py-4 text-base font-semibold text-white shadow-lg shadow-navy/20 transition-all duration-300 hover:bg-navy-light hover:shadow-navy/30 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <ShoppingCart size={18} strokeWidth={2} />
-                  {products[0]?.stock <= 0 ? t("outOfStock") : t("addToCart")}
+                  {product && product.stock <= 0 ? t("outOfStock") : t("addToCart")}
                 </button>
               </div>
+
+              {/* Volume pricing — what you actually pay at each quantity */}
+              {packTiers.length > 0 && (
+                <div className="rounded-2xl border border-brand-red/15 bg-brand-red/[0.03] p-4">
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-red">
+                    {t("tiersTitle")}
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {packTiers.map((tier) => {
+                      const gift = tier.giftProductId
+                        ? promotions.find((p) => p.id === tier.promotionId)?.giftProduct
+                        : null;
+                      const giftName = gift
+                        ? (locale === "fr" ? gift.nameFr : gift.name) ?? ""
+                        : "";
+                      const isBest = bestTier?.promotionId === tier.promotionId;
+
+                      return (
+                        <div
+                          key={tier.promotionId}
+                          className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-white px-3.5 py-2.5 ${
+                            isBest
+                              ? "ring-1 ring-brand-red/25"
+                              : "ring-1 ring-navy/[0.06]"
+                          }`}
+                        >
+                          <span className="text-sm font-semibold text-navy">
+                            {t("tierBox", { count: tier.quantity })}
+                          </span>
+
+                          {gift && (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700">
+                              <Gift size={12} />
+                              {t("tierGift", {
+                                quantity: tier.giftQuantity ?? 1,
+                                product: giftName,
+                              })}
+                            </span>
+                          )}
+
+                          {tier.quantity > 1 && (
+                            <span className="text-xs text-navy/40">
+                              {t("tierPerUnit", { price: tier.perUnit.toFixed(2) })}
+                            </span>
+                          )}
+
+                          {isBest && (
+                            <span className="rounded-full bg-brand-red/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-red">
+                              {t("tierBest")}
+                            </span>
+                          )}
+
+                          <span className="ml-auto flex items-center gap-2">
+                            <span className="rounded-full bg-brand-red/10 px-2 py-0.5 text-[11px] font-bold text-brand-red">
+                              −{tier.percentOff}%
+                            </span>
+                            <span className="text-sm font-bold text-navy">
+                              {tier.total.toFixed(2)} TND
+                            </span>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2.5 text-[11px] leading-relaxed text-navy/35">
+                    {t("tiersNote")}
+                  </p>
+                </div>
+              )}
 
               {/* Trust bar — recommendation + certifications */}
               <div className="mt-1 flex flex-col gap-3 rounded-2xl border border-navy/[0.06] bg-navy/[0.02] px-5 py-4">

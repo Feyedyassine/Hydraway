@@ -8,11 +8,17 @@ import {
   evaluatePromo,
   normalizeCode,
 } from "@/lib/promo";
+import {
+  MAX_QTY_PER_LINE,
+  evaluatePromotions,
+  freeUnitsByProduct,
+  lineDiscounts,
+} from "@/lib/promotions";
+import { loadActivePromotions, toEvaluable } from "@/lib/promotions-db";
 import { and, eq, isNull, lt, or, sql } from "drizzle-orm";
 
 const SHIPPING_FEE_TND = 9.5; // 8.5 livraison + 1 timbre fiscal (StockBridge COD)
 
-const MAX_QTY_PER_LINE = 20;
 const MAX_TOTAL_ITEMS = 50;
 const MAX_ORDER_TOTAL_TND = 5000;
 const TUNISIAN_PHONE_REGEX = /^(?:\+216|00216)?(2[0-9]|3[0-9]|4[0-9]|5[0-57-9]|7[0-9]|9[0-9])\d{6}$/;
@@ -124,15 +130,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Collapse duplicate lines so the caps below — and the promotion maths —
+    // see one line per product regardless of what the client sent.
+    const mergedItems = Array.from(
+      items
+        .reduce(
+          (m, i) => m.set(i.productId, (m.get(i.productId) ?? 0) + (i.quantity || 0)),
+          new Map<number, number>()
+        )
+        .entries(),
+      ([productId, quantity]) => ({ productId, quantity })
+    );
+
     // Quantity caps
-    const totalUnits = items.reduce((n, i) => n + (i.quantity || 0), 0);
+    const totalUnits = mergedItems.reduce((n, i) => n + (i.quantity || 0), 0);
     if (totalUnits > MAX_TOTAL_ITEMS) {
       return NextResponse.json(
         { error: `Order exceeds the maximum of ${MAX_TOTAL_ITEMS} items` },
         { status: 400 }
       );
     }
-    if (items.some((i) => i.quantity > MAX_QTY_PER_LINE || i.quantity < 1)) {
+    if (mergedItems.some((i) => i.quantity > MAX_QTY_PER_LINE || i.quantity < 1)) {
       return NextResponse.json(
         { error: `Quantity per item must be between 1 and ${MAX_QTY_PER_LINE}` },
         { status: 400 }
@@ -154,7 +172,7 @@ export async function POST(req: NextRequest) {
       product: typeof products.$inferSelect;
     }[] = [];
 
-    for (const item of items) {
+    for (const item of mergedItems) {
       const [product] = await db
         .select()
         .from(products)
@@ -184,7 +202,52 @@ export async function POST(req: NextRequest) {
       productsTotal += product.price * item.quantity;
     }
 
+    // Automatic promotions. Recomputed here from the resolved lines — the
+    // client never gets to say which promotion applies, or what it's worth.
+    // Only retail COD/Flouci orders reach this route, so bulk NET-30 orders
+    // are excluded by construction.
+    const evalLines = resolvedItems.map((r) => ({
+      productId: r.productId,
+      quantity: r.quantity,
+      price: r.unitPrice,
+    }));
+    const activePromotions = await loadActivePromotions();
+    // `grant` is deliberately ignored: if the customer removed a gift line, the
+    // server does not put it back. It only ever discounts what's in the cart.
+    const { applied: appliedPromotion } = evaluatePromotions(
+      evalLines,
+      activePromotions.map(toEvaluable)
+    );
+
+    const promotionDiscount = Math.min(
+      appliedPromotion?.discount ?? 0,
+      productsTotal
+    );
+    const freeUnits = freeUnitsByProduct(appliedPromotion);
+    const promotionLineDiscounts = lineDiscounts(appliedPromotion, evalLines);
+
+    let promotionSnapshot: string | null = null;
+    if (appliedPromotion) {
+      const row = activePromotions.find((p) => p.id === appliedPromotion.promotionId);
+      promotionSnapshot = JSON.stringify({
+        id: appliedPromotion.promotionId,
+        slug: appliedPromotion.slug,
+        name: appliedPromotion.name,
+        type: appliedPromotion.type,
+        triggerProductId: row?.triggerProductId,
+        triggerQuantity: row?.triggerQuantity,
+        activationQuantity: row?.activationQuantity,
+        discountPercent: row?.discountPercent,
+        giftProductId: row?.giftProductId,
+        giftQuantity: row?.giftQuantity,
+        discount: promotionDiscount,
+        freeUnits: appliedPromotion.freeUnits,
+      });
+    }
+
     // Promo code: validate and atomically claim a redemption slot.
+    // When a promotion is already applied the code still gets recorded and
+    // claimed — the influencer keeps attribution — but adds no extra discount.
     let discountAmount = 0;
     let promoSnapshot: string | null = null;
 
@@ -230,12 +293,12 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      discountAmount = result.discount;
+      discountAmount = appliedPromotion ? 0 : result.discount;
       claimedPromoId = promo.id;
       promoSnapshot = normalized;
     }
 
-    const discountedSubtotal = productsTotal - discountAmount;
+    const discountedSubtotal = productsTotal - promotionDiscount - discountAmount;
 
     // For COD: customer pays products + shipping at delivery.
     // For Flouci: shipping is collected at delivery as well, so the online
@@ -276,6 +339,9 @@ export async function POST(req: NextRequest) {
         promoCodeId: claimedPromoId,
         promoCodeSnapshot: promoSnapshot,
         discountAmount,
+        promotionId: appliedPromotion?.promotionId ?? null,
+        promotionSnapshot,
+        promotionDiscount,
         notes: notes || null,
       })
       .returning();
@@ -286,15 +352,35 @@ export async function POST(req: NextRequest) {
         productId: item.productId,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
+        freeQuantity: Math.min(freeUnits.get(item.productId) ?? 0, item.quantity),
       });
 
+      // Free units are real units — they ship, so they come out of stock too.
       await db
         .update(products)
         .set({ stock: item.product.stock - item.quantity })
         .where(eq(products.id, item.productId));
     }
 
-    const priceRatio = productsTotal > 0 ? discountedSubtotal / productsTotal : 1;
+    // Per-line pricing for StockBridge. A promotion discount belongs to a
+    // specific line, so it's applied there; a promo-code discount has no
+    // natural home and stays proportional across lines. Either way the line
+    // totals sum to `discountedSubtotal`, so the amount collected on delivery
+    // matches what the customer saw at checkout.
+    const codeRatio =
+      productsTotal > 0 ? (productsTotal - discountAmount) / productsTotal : 1;
+
+    const submitLines = resolvedItems.map((r) => {
+      const lineTotal = r.unitPrice * r.quantity;
+      const afterPromotion =
+        lineTotal - (promotionLineDiscounts.get(r.productId) ?? 0);
+      return {
+        product: r.product,
+        quantity: r.quantity,
+        priceHt:
+          Math.round(((afterPromotion * codeRatio) / r.quantity) * 100) / 100,
+      };
+    });
 
     // Submit to StockBridge for COD orders. Flouci orders wait for payment
     // confirmation (handled separately) before being pushed.
@@ -302,11 +388,7 @@ export async function POST(req: NextRequest) {
       await submitOrderToStockBridge(
         order.id,
         newClient,
-        resolvedItems.map((r) => ({
-          product: r.product,
-          quantity: r.quantity,
-          priceHt: Math.round(r.unitPrice * priceRatio * 100) / 100,
-        })),
+        submitLines,
         client.postalCode
       );
     }
@@ -332,7 +414,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ orderId: order.id, status: "pending" });
+    // Totals come back so the client reports the amount actually charged
+    // (to the customer and to the Meta pixel) rather than its own estimate.
+    return NextResponse.json({
+      orderId: order.id,
+      status: "pending",
+      total,
+      promotionDiscount,
+      discountAmount,
+    });
   } catch (error) {
     console.error("Order creation error:", error);
     if (claimedPromoId !== null) await releasePromoSlot(claimedPromoId);

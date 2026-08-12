@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Package, ShoppingCart, Users, LogOut, Menu, X, LayoutDashboard, MessageSquare, UserCog, User, Tag } from "lucide-react";
+import { Package, ShoppingCart, Users, LogOut, Menu, X, LayoutDashboard, MessageSquare, UserCog, User, Tag, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { ToastProvider } from "./toast";
 
@@ -20,7 +20,8 @@ const NAV_ITEMS: { href: string; label: string; icon: typeof LayoutDashboard; ro
   { href: "/admin", label: "Orders", icon: ShoppingCart, roles: ["admin", "warehouse"] },
   { href: "/admin/products", label: "Products", icon: Package, roles: ["admin"] },
   { href: "/admin/clients", label: "Clients", icon: Users, roles: ["admin", "support"] },
-  { href: "/admin/promos", label: "Promos", icon: Tag, roles: ["admin"] },
+  { href: "/admin/promotions", label: "Promotions", icon: Sparkles, roles: ["admin"] },
+  { href: "/admin/promos", label: "Promo Codes", icon: Tag, roles: ["admin"] },
   { href: "/admin/contact", label: "Messages", icon: MessageSquare, roles: ["admin", "support"] },
   { href: "/admin/users", label: "Team", icon: UserCog, roles: ["admin"] },
   { href: "/admin/profile", label: "My Profile", icon: User, roles: ["admin", "warehouse", "support"] },

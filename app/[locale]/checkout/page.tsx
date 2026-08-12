@@ -7,7 +7,7 @@ import { fbTrack } from "@/lib/fb-pixel";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import Script from "next/script";
-import { CreditCard, Banknote, ArrowLeft, ShoppingBag, ChevronDown, Tag, X } from "lucide-react";
+import { CreditCard, Banknote, ArrowLeft, ShoppingBag, ChevronDown, Tag, X, Gift } from "lucide-react";
 import Navbar from "../components/Navbar";
 import CartDrawer from "../components/CartDrawer";
 
@@ -30,7 +30,15 @@ const GOVERNORATES = [
 export default function CheckoutPage() {
   const t = useTranslations("checkout");
   const locale = useLocale();
-  const { items, total, clearCart } = useCart();
+  const {
+    items,
+    total,
+    clearCart,
+    promotion,
+    promotionDiscount,
+    freeUnits,
+    promotionsLoaded,
+  } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "flouci">("cod");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; orderId?: number } | null>(null);
@@ -57,8 +65,10 @@ export default function CheckoutPage() {
   const checkoutTracked = useRef(false);
 
   const SHIPPING_FEE = 9.5;
-  const discount = promoApplied?.discount ?? 0;
-  const discountedSubtotal = Math.max(0, total - discount);
+  // An automatic promotion and a promo code never both discount an order —
+  // the code is kept for attribution only once a promotion applies.
+  const codeDiscount = promotion ? 0 : promoApplied?.discount ?? 0;
+  const discountedSubtotal = Math.max(0, total - promotionDiscount - codeDiscount);
   const grandTotal = discountedSubtotal + SHIPPING_FEE;
 
   const renderTurnstile = () => {
@@ -79,20 +89,21 @@ export default function CheckoutPage() {
     if (window.turnstile) renderTurnstile();
   }, []);
 
-  // Fire InitiateCheckout once the cart is loaded (localStorage hydrates
-  // after first render, so wait until items are present).
+  // Fire InitiateCheckout once the cart is loaded (localStorage hydrates after
+  // first render) and promotions have resolved, so the value Meta optimises
+  // against is the price the customer is actually being shown.
   useEffect(() => {
-    if (checkoutTracked.current || items.length === 0) return;
+    if (checkoutTracked.current || items.length === 0 || !promotionsLoaded) return;
     checkoutTracked.current = true;
     fbTrack("InitiateCheckout", {
       content_ids: items.map((i) => String(i.productId)),
       contents: items.map((i) => ({ id: String(i.productId), quantity: i.quantity })),
       content_type: "product",
       num_items: items.reduce((sum, i) => sum + i.quantity, 0),
-      value: total,
+      value: discountedSubtotal,
       currency: "TND",
     });
-  }, [items, total]);
+  }, [items, discountedSubtotal, promotionsLoaded]);
 
   const validatePhone = (phone: string): boolean => {
     const cleaned = phone.replace(/[\s\-().]/g, "");
@@ -209,7 +220,8 @@ export default function CheckoutPage() {
         contents: items.map((i) => ({ id: String(i.productId), quantity: i.quantity })),
         content_type: "product",
         num_items: items.reduce((sum, i) => sum + i.quantity, 0),
-        value: grandTotal,
+        // Prefer the server's figure — it re-ran the promotion maths.
+        value: typeof data.total === "number" ? data.total : grandTotal,
         currency: "TND",
       });
 
@@ -487,30 +499,40 @@ export default function CheckoutPage() {
                 <h2 className="mb-5 text-lg font-bold text-navy">{t("summary")}</h2>
 
                 <div className="space-y-4">
-                  {items.map((item) => (
-                    <div key={item.productId} className="flex gap-3">
-                      {item.image && (
-                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-50">
-                          <Image
-                            src={item.image}
-                            alt={locale === "fr" ? item.nameFr : item.name}
-                            width={56}
-                            height={56}
-                            className="h-full w-full object-contain p-1"
-                          />
+                  {items.map((item) => {
+                    const free = freeUnits.get(item.productId) ?? 0;
+                    return (
+                      <div key={item.productId} className="flex gap-3">
+                        {item.image && (
+                          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-50">
+                            <Image
+                              src={item.image}
+                              alt={locale === "fr" ? item.nameFr : item.name}
+                              width={56}
+                              height={56}
+                              className="h-full w-full object-contain p-1"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-navy">
+                            {locale === "fr" ? item.nameFr : item.name}
+                          </p>
+                          <p className="text-xs text-navy/40">
+                            x{item.quantity}
+                            {free > 0 && (
+                              <span className="ml-1.5 font-semibold text-green-700">
+                                · {t("promotionFree", { count: free })}
+                              </span>
+                            )}
+                          </p>
                         </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-navy">
-                          {locale === "fr" ? item.nameFr : item.name}
-                        </p>
-                        <p className="text-xs text-navy/40">x{item.quantity}</p>
+                        <span className="text-sm font-semibold text-navy">
+                          {((item.quantity - free) * item.price).toFixed(2)} TND
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-navy">
-                        {(item.price * item.quantity).toFixed(2)} TND
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="my-5 h-px bg-gray-100" />
@@ -520,14 +542,25 @@ export default function CheckoutPage() {
                     <span className="text-navy/60">{t("subtotal")}</span>
                     <span className="font-semibold text-navy">{total.toFixed(2)} TND</span>
                   </div>
-                  {promoApplied && (
+                  {promotion && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-1.5 text-green-700">
+                        <Gift size={13} />
+                        {promotion.name}
+                      </span>
+                      <span className="font-semibold text-green-700">
+                        −{promotionDiscount.toFixed(2)} TND
+                      </span>
+                    </div>
+                  )}
+                  {promoApplied && codeDiscount > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-1.5 text-green-700">
                         <Tag size={13} />
                         {t("promoApplied")} ({promoApplied.code})
                       </span>
                       <span className="font-semibold text-green-700">
-                        −{promoApplied.discount.toFixed(2)} TND
+                        −{codeDiscount.toFixed(2)} TND
                       </span>
                     </div>
                   )}
@@ -544,6 +577,11 @@ export default function CheckoutPage() {
                   <label className="mb-1.5 block text-xs font-medium text-navy/50">
                     {t("promoLabel")}
                   </label>
+                  {promotion && (
+                    <p className="mb-2 rounded-xl bg-navy/[0.04] px-3 py-2 text-xs leading-relaxed text-navy/60">
+                      {t("promoBlockedByPromotion", { promotion: promotion.name })}
+                    </p>
+                  )}
                   {promoApplied ? (
                     <div className="flex items-center justify-between rounded-xl bg-green-50 px-3 py-2.5">
                       <span className="text-sm font-mono font-semibold text-green-800">

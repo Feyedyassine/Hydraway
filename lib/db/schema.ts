@@ -75,6 +75,14 @@ export const orders = sqliteTable("orders", {
   promoCodeId: integer("promo_code_id").references(() => promoCodes.id),
   promoCodeSnapshot: text("promo_code_snapshot"),
   discountAmount: real("discount_amount"),
+  // Automatic promotions are a separate feature from promo codes: at most one
+  // of `discountAmount` / `promotionDiscount` is ever non-zero on an order.
+  promotionId: integer("promotion_id").references(() => promotions.id),
+  promotionSnapshot: text("promotion_snapshot"),
+  // Nullable because drizzle-kit can't add a NOT NULL column to a table that
+  // already holds rows. Null means the same as 0: no promotion discounted this
+  // order. Order creation always writes an explicit number.
+  promotionDiscount: real("promotion_discount"),
   notes: text("notes"),
   createdAt: text("created_at")
     .notNull()
@@ -127,4 +135,43 @@ export const orderItems = sqliteTable("order_items", {
     .references(() => products.id),
   quantity: integer("quantity").notNull(),
   unitPrice: real("unit_price").notNull(),
+  // Units of this line granted free by a promotion. Covers both shapes:
+  // "buy 2 get 1" is quantity 3 / freeQuantity 1, and a free tote alongside a
+  // paid one is quantity 2 / freeQuantity 1. Nullable for the same reason as
+  // orders.promotionDiscount — null reads as 0, no units were free.
+  freeQuantity: integer("free_quantity"),
+});
+
+export const promotions = sqliteTable("promotions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  type: text("type", { enum: ["percentage", "bxgy"] }).notNull(),
+  triggerProductId: integer("trigger_product_id")
+    .notNull()
+    .references(() => products.id),
+  triggerQuantity: integer("trigger_quantity").notNull(),
+  // Units of the trigger product the cart must hold for this promotion to
+  // fire: X + Y for same-product BXGY, X otherwise. The creation-time
+  // uniqueness gate keys on (triggerProductId, activationQuantity), so two
+  // promotions can never fight over the same cart.
+  activationQuantity: integer("activation_quantity").notNull(),
+  discountPercent: real("discount_percent"),
+  giftProductId: integer("gift_product_id").references(() => products.id),
+  giftQuantity: integer("gift_quantity"),
+  headline: text("headline").notNull(),
+  headlineFr: text("headline_fr").notNull(),
+  description: text("description"),
+  descriptionFr: text("description_fr"),
+  ogImage: text("og_image"),
+  startsAt: text("starts_at"),
+  expiresAt: text("expires_at"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  deletedAt: text("deleted_at"),
+  createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updatedAt: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
 });

@@ -44,7 +44,13 @@
       "gmp": "GMP – 21 CFR Part 111",
       "fssc": "FSSC 22000",
       "tagline": "Local production. International standards."
-    }
+    },
+    "tiersTitle": "Current offers",
+    "tierBox": "{count, plural, one {# box} other {# boxes}}",
+    "tierPerUnit": "{price} TND per box",
+    "tierGift": "+ {quantity} × {product} free",
+    "tierBest": "Best value",
+    "tiersNote": "Applied automatically in your cart — no code needed."
   },
   "benefits": {
     "title": "When to use HydraWay?",
@@ -70,10 +76,22 @@
     "description": "Drinking water is essential. But without electrolytes, hydric balance isn't optimal. Electrolytes are minerals present in body fluids, capable of conducting electrical signals necessary for the normal functioning of the body.",
     "minerals": {
       "title": "Essential minerals",
-      "sodium": { "name": "Sodium", "symbol": "Na" },
-      "potassium": { "name": "Potassium", "symbol": "K" },
-      "magnesium": { "name": "Magnesium", "symbol": "Mg" },
-      "chloride": { "name": "Chloride", "symbol": "Cl" }
+      "sodium": {
+        "name": "Sodium",
+        "symbol": "Na"
+      },
+      "potassium": {
+        "name": "Potassium",
+        "symbol": "K"
+      },
+      "magnesium": {
+        "name": "Magnesium",
+        "symbol": "Mg"
+      },
+      "chloride": {
+        "name": "Chloride",
+        "symbol": "Cl"
+      }
     },
     "functions": {
       "title": "Why are they essential?",
@@ -538,10 +556,28 @@
       "backHome": "Back to Home"
     }
   },
+  "offer": {
+    "badge": "Special offer",
+    "backHome": "Back to Home",
+    "includes": "{quantity} × {product}",
+    "plusFree": "+ {product} free",
+    "save": "Save {amount} TND",
+    "shippingNote": "Excludes delivery (9.50 TND, paid on arrival).",
+    "claim": "Claim this offer",
+    "outOfStock": "Out of stock",
+    "expiredTitle": "This offer has ended",
+    "expiredBody": "It is no longer available, but our products still are.",
+    "browseProducts": "Browse our products",
+    "freeTag": "Free",
+    "expiredCta": "Offer ended"
+  },
   "cart": {
     "title": "Your Cart",
     "empty": "Your cart is empty",
+    "subtotal": "Subtotal",
     "total": "Total",
+    "free": "{count, plural, one {# free} other {# free}}",
+    "upsell": "Add {count, plural, one {# item} other {# items}} and save {amount} TND",
     "checkout": "Checkout"
   },
   "checkout": {
@@ -577,6 +613,8 @@
     "backHome": "Back to Home",
     "phoneInvalid": "Invalid Tunisian phone number",
     "phoneLength": "Phone number must be 8 digits",
+    "promotionFree": "{count, plural, one {# free} other {# free}}",
+    "promoBlockedByPromotion": "The « {promotion} » offer is already applied — it is the better deal. Your code will still be recorded, with no extra discount.",
     "promoLabel": "Promo code",
     "promoPlaceholder": "Enter a code",
     "promoApply": "Apply",

@@ -3,14 +3,27 @@
 import { useCart } from "@/lib/cart-context";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { X, Minus, Plus, Trash2, ShoppingBag, Gift, Sparkles } from "lucide-react";
 import Image from "next/image";
 
 export default function CartDrawer() {
   const t = useTranslations("cart");
   const locale = useLocale();
   const router = useRouter();
-  const { items, drawerOpen, closeDrawer, updateQuantity, removeItem, total, count } = useCart();
+  const {
+    items,
+    drawerOpen,
+    closeDrawer,
+    updateQuantity,
+    removeItem,
+    total,
+    count,
+    promotion,
+    promotionDiscount,
+    discountedTotal,
+    freeUnits,
+    upsell,
+  } = useCart();
 
   const handleCheckout = () => {
     closeDrawer();
@@ -61,7 +74,10 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div className="space-y-4">
-              {items.map((item) => (
+              {items.map((item) => {
+                const free = freeUnits.get(item.productId) ?? 0;
+                const lineTotal = (item.quantity - free) * item.price;
+                return (
                 <div key={item.productId} className="flex gap-4 rounded-2xl bg-gray-50 p-4">
                   {/* Image */}
                   {item.image && (
@@ -84,6 +100,12 @@ export default function CartDrawer() {
                           {locale === "fr" ? item.nameFr : item.name}
                         </p>
                         <p className="text-xs text-navy/40">{item.price.toFixed(2)} TND</p>
+                        {free > 0 && (
+                          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                            <Gift size={11} />
+                            {t("free", { count: free })}
+                          </p>
+                        )}
                       </div>
                       <button
                         onClick={() => removeItem(item.productId)}
@@ -112,12 +134,31 @@ export default function CartDrawer() {
                         <Plus size={12} />
                       </button>
                       <span className="ml-auto text-sm font-bold text-navy">
-                        {(item.price * item.quantity).toFixed(2)} TND
+                        {free > 0 && (
+                          <span className="mr-1.5 font-normal text-navy/30 line-through">
+                            {(item.price * item.quantity).toFixed(2)}
+                          </span>
+                        )}
+                        {lineTotal.toFixed(2)} TND
                       </span>
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
+            </div>
+          )}
+
+          {/* Nudge to the next tier — where automatic promotions earn their keep */}
+          {items.length > 0 && upsell && (
+            <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-brand-red/20 bg-brand-red/[0.04] px-4 py-3">
+              <Sparkles size={16} className="mt-0.5 shrink-0 text-brand-red" />
+              <p className="text-xs font-medium leading-relaxed text-navy">
+                {t("upsell", {
+                  count: upsell.unitsNeeded,
+                  amount: upsell.projectedDiscount.toFixed(2),
+                })}
+              </p>
             </div>
           )}
         </div>
@@ -125,9 +166,28 @@ export default function CartDrawer() {
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t px-6 py-5">
+            {promotion && (
+              <div className="mb-3 space-y-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-navy/50">{t("subtotal")}</span>
+                  <span className="text-navy/50">{total.toFixed(2)} TND</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1.5 font-medium text-green-700">
+                    <Gift size={13} />
+                    {promotion.name}
+                  </span>
+                  <span className="font-semibold text-green-700">
+                    −{promotionDiscount.toFixed(2)} TND
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm font-semibold text-navy/60">{t("total")}</span>
-              <span className="text-xl font-bold text-navy">{total.toFixed(2)} TND</span>
+              <span className="text-xl font-bold text-navy">
+                {discountedTotal.toFixed(2)} TND
+              </span>
             </div>
             <button
               onClick={handleCheckout}

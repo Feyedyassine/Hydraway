@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth";
 import { listProducts, updateProduct as sbUpdateProduct, StockBridgeError } from "@/lib/stockbridge";
+import { livePromotionsUsingProduct } from "@/lib/promotions-db";
 import { eq } from "drizzle-orm";
 
 // GET /api/admin/products
@@ -103,6 +104,36 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Product ID required" }, { status: 400 });
     }
 
+    const [current] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, body.id))
+      .limit(1);
+    if (!current) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    // Guard the two edits that break live promotions. Deactivating makes order
+    // creation reject the whole cart; clearing the SKU lets the order succeed
+    // while its StockBridge push silently aborts, so the warehouse never sees it.
+    const deactivating = body.active === false && current.active;
+    const unlinking = current.sku && !body.sku;
+    if (deactivating || unlinking) {
+      const blocking = await livePromotionsUsingProduct(body.id);
+      if (blocking.length > 0) {
+        const names = blocking.map((p) => `"${p.name}"`).join(", ");
+        return NextResponse.json(
+          {
+            error: deactivating
+              ? `Can't deactivate — ${names} ${blocking.length === 1 ? "uses" : "use"} this product. Deactivate the promotion first, or orders using it will fail.`
+              : `Can't clear the SKU — ${names} ${blocking.length === 1 ? "depends" : "depend"} on this product reaching StockBridge. Deactivate the promotion first.`,
+            promotions: blocking.map((p) => ({ id: p.id, name: p.name })),
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const [updated] = await db
       .update(products)
       .set({
@@ -153,6 +184,18 @@ export async function DELETE(req: NextRequest) {
   try {
     await requireAuth(["admin"]);
     const { id } = await req.json();
+
+    const blocking = await livePromotionsUsingProduct(id);
+    if (blocking.length > 0) {
+      const names = blocking.map((p) => `"${p.name}"`).join(", ");
+      return NextResponse.json(
+        {
+          error: `Can't delete — ${names} ${blocking.length === 1 ? "uses" : "use"} this product. Deactivate the promotion first.`,
+          promotions: blocking.map((p) => ({ id: p.id, name: p.name })),
+        },
+        { status: 409 }
+      );
+    }
 
     await db.delete(products).where(eq(products.id, id));
     return NextResponse.json({ success: true });

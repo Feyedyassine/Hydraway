@@ -44,7 +44,13 @@
       "gmp": "GMP – 21 CFR Part 111",
       "fssc": "FSSC 22000",
       "tagline": "Production locale. Standards internationaux."
-    }
+    },
+    "tiersTitle": "Offres en cours",
+    "tierBox": "{count, plural, one {# boîte} other {# boîtes}}",
+    "tierPerUnit": "soit {price} TND la boîte",
+    "tierGift": "+ {quantity} × {product} offert",
+    "tierBest": "Meilleure offre",
+    "tiersNote": "Réduction appliquée automatiquement dans le panier, sans code."
   },
   "benefits": {
     "title": "Quand utiliser HydraWay ?",
@@ -70,10 +76,22 @@
     "description": "Boire de l'eau est essentiel. Mais sans électrolytes, l'équilibre hydrique n'est pas optimal. Les électrolytes sont des minéraux présents dans les fluides corporels, capables de conduire des signaux électriques nécessaires au fonctionnement normal de l'organisme.",
     "minerals": {
       "title": "Minéraux essentiels",
-      "sodium": { "name": "Sodium", "symbol": "Na" },
-      "potassium": { "name": "Potassium", "symbol": "K" },
-      "magnesium": { "name": "Magnésium", "symbol": "Mg" },
-      "chloride": { "name": "Chlorure", "symbol": "Cl" }
+      "sodium": {
+        "name": "Sodium",
+        "symbol": "Na"
+      },
+      "potassium": {
+        "name": "Potassium",
+        "symbol": "K"
+      },
+      "magnesium": {
+        "name": "Magnésium",
+        "symbol": "Mg"
+      },
+      "chloride": {
+        "name": "Chlorure",
+        "symbol": "Cl"
+      }
     },
     "functions": {
       "title": "Pourquoi sont-ils essentiels ?",
@@ -538,10 +556,28 @@
       "backHome": "Retour à l'accueil"
     }
   },
+  "offer": {
+    "badge": "Offre spéciale",
+    "backHome": "Retour à l'accueil",
+    "includes": "{quantity} × {product}",
+    "plusFree": "+ {product} offert",
+    "save": "Économisez {amount} TND",
+    "shippingNote": "Hors livraison (9,50 TND, à régler à la réception).",
+    "claim": "Profiter de l'offre",
+    "outOfStock": "Rupture de stock",
+    "expiredTitle": "Cette offre est terminée",
+    "expiredBody": "Elle n'est plus disponible, mais nos produits le sont toujours.",
+    "browseProducts": "Voir nos produits",
+    "freeTag": "Offert",
+    "expiredCta": "Offre terminée"
+  },
   "cart": {
     "title": "Votre Panier",
     "empty": "Votre panier est vide",
+    "subtotal": "Sous-total",
     "total": "Total",
+    "free": "{count, plural, one {# offert} other {# offerts}}",
+    "upsell": "Ajoutez {count, plural, one {# article} other {# articles}} et économisez {amount} TND",
     "checkout": "Commander"
   },
   "checkout": {
@@ -577,6 +613,8 @@
     "backHome": "Retour à l'accueil",
     "phoneInvalid": "Numéro de téléphone tunisien invalide",
     "phoneLength": "Le numéro doit contenir 8 chiffres",
+    "promotionFree": "{count, plural, one {# offert} other {# offerts}}",
+    "promoBlockedByPromotion": "La promotion « {promotion} » est déjà appliquée — elle est plus avantageuse. Votre code sera enregistré, sans réduction supplémentaire.",
     "promoLabel": "Code promo",
     "promoPlaceholder": "Entrer un code",
     "promoApply": "Appliquer",

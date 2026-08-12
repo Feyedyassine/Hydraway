@@ -33,6 +33,7 @@ export async function GET() {
             id: orderItems.id,
             quantity: orderItems.quantity,
             unitPrice: orderItems.unitPrice,
+            freeQuantity: orderItems.freeQuantity,
             productName: products.name,
             productNameFr: products.nameFr,
           })
