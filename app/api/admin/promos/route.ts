@@ -15,7 +15,7 @@ function authErr(err: unknown) {
 
 export async function GET() {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
     const rows = await db
       .select({
         id: promoCodes.id,
@@ -51,7 +51,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
     const body = (await req.json()) as {
       code?: string;
       type?: "percentage" | "fixed";
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
     const body = (await req.json()) as {
       id?: number;
       active?: boolean;
@@ -161,7 +161,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
     const { id } = (await req.json()) as { id?: number };
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 

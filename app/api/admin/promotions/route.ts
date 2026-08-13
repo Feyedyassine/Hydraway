@@ -262,7 +262,7 @@ async function validate(
 
 export async function GET() {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
 
     const rows = await db
       .select({
@@ -318,7 +318,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
     const body = (await req.json()) as PromotionInput;
 
     const result = await validate(body, null);
@@ -337,7 +337,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
     const body = (await req.json()) as PromotionInput & { id?: number };
     if (!body.id) {
       return NextResponse.json({ error: "id required" }, { status: 400 });
@@ -367,7 +367,7 @@ export async function PUT(req: NextRequest) {
 /** Toggle only — full edits go through PUT so validation always runs. */
 export async function PATCH(req: NextRequest) {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
     const body = (await req.json()) as { id?: number; active?: boolean };
     if (!body.id || typeof body.active !== "boolean") {
       return NextResponse.json({ error: "id and active required" }, { status: 400 });
@@ -430,7 +430,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    await requireAuth(["admin"]);
+    await requireAuth(["admin", "support"]);
     const { id } = (await req.json()) as { id?: number };
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 

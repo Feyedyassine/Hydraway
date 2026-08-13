@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 // GET /api/admin/products
 export async function GET() {
   try {
-    await requireAuth(["admin", "warehouse"]);
+    await requireAuth(["admin", "warehouse", "support"]);
     const all = await db.select().from(products);
 
     const linkedIds = new Set(
