@@ -46,11 +46,11 @@
       "tagline": "Production locale. Standards internationaux."
     },
     "tiersTitle": "Offres en cours",
-    "tierBox": "{count, plural, one {# boîte} other {# boîtes}}",
     "tierPerUnit": "soit {price} TND la boîte",
-    "tierGift": "+ {quantity} × {product} offert",
     "tierBest": "Meilleure offre",
-    "tiersNote": "Réduction appliquée automatiquement dans le panier, sans code."
+    "tiersNote": "Réduction appliquée automatiquement dans le panier, sans code.",
+    "tierBuy": "Achetez {count} pour {price} TND",
+    "tierBuyGift": "Achetez {count}, recevez {product} offert"
   },
   "benefits": {
     "title": "Quand utiliser HydraWay ?",

@@ -223,7 +223,6 @@ export default async function OfferPage({ params }: Props) {
                   />
                 </div>
 
-                <div className="absolute -top-4 -left-4 h-24 w-24 rounded-full border-2 border-dashed border-brand-red/15" />
               </div>
 
               {/* Buying panel */}
